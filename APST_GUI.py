@@ -2,4 +2,12 @@
 #Automated Pulse Sensing Tool 
 #3rd Year Undergraduate Project 
 
-print("Hello World")
+from tkinter import * 
+
+#Main Page 
+root = Tk()
+
+myLabel = Label(root, text = "Hello World") 
+
+myLabel.pack()
+root.mainloop()
