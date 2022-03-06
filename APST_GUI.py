@@ -7,7 +7,10 @@ from tkinter import *
 #Main Page 
 root = Tk()
 
+#creates title above the page 
 myLabel = Label(root, text = "Hello World") 
 
 myLabel.pack()
+
+#main loop runs constantly 
 root.mainloop()
