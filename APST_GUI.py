@@ -8,13 +8,22 @@ import time
 import serial.tools.list_ports 
 
 current_pos = [0,0,0]
-MAX_X = 100; 
-MAX_Y = 100; 
-MAX_Z = 100;
+MAX_X = 100
+MAX_Y = 100
+MAX_Z = 100
 
 #Main Page 
 root = Tk()
 
+def change_to_str(str): 
+    new_str = ""
+    num = "0123456789"
+    for i in range(len(str)): 
+        if str[i] in num: 
+            new_str+=str[i]
+        if str[i] == ",":
+            new_str+=","
+    return new_str
 
 def move_Up(): 
     if current_pos[2]>=0: 
@@ -79,9 +88,13 @@ def write_read(x):
     time.sleep(0.05) 
     data = arduino.readline() 
     return data 
-while True: 
-    num = input("Enter a number: ")
-    value = write_read(num) 
-    print(value)
 
-root.mainloop()
+while True: 
+    
+    root.update_idletasks() 
+    num = input("Enter a number: ")
+    #num = change_to_str(str(current_pos))
+    value = write_read(num)
+    #print(value)
+    root.update()
+
