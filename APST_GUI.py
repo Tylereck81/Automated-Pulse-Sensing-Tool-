@@ -35,7 +35,7 @@ def move_Up():
     else:
         current_pos[2] = 0
     
-    print(current_pos)
+    #print(current_pos)
         
 def move_Down():
     if(current_pos[2]>=0): 
@@ -45,7 +45,7 @@ def move_Down():
     else:
         current_pos[2] = 0
     
-    print(current_pos)
+    #print(current_pos)
 
 def move_Left():
     if(current_pos[0]>=0): 
@@ -55,7 +55,7 @@ def move_Left():
     else:
         current_pos[0] = 0
     
-    print(current_pos)
+    #print(current_pos)
 
 def move_Right():
     if current_pos[0]>=0: 
@@ -66,38 +66,61 @@ def move_Right():
     else:
         current_pos[0] = 0
     
-    print(current_pos)
+    #print(current_pos)
 
-
-def threading(): 
-    t1 = Thread(target = arduino_listen, daemon=True)
+#moves the position based on which button was pressed and then creates
+# a thread to connect to the arduino and move the motor 
+def threading(n): 
+    if n == 1: # move up
+        move_Up()
+    elif n == 2: #move down
+        move_Down()
+    elif n == 3: #move left 
+        move_Left()
+    elif n == 4: #move right
+        move_Right()
+    
+    t1 = Thread(target = arduino_move, daemon=True)
     t1.start()
 
-def arduino_listen(): 
-    #Connect to Arduino 
+
+def arduino_move(): 
+    #Connect to Arduino and send the position to move to 
     arduino = Serial(port='COM3', baudrate= 115200, timeout = .1) 
-    def write_read(x): 
-        print(x)
-        arduino.write(bytes(x,'utf-8'))
-        time.sleep(0.05) 
-        data = arduino.readline() 
-        return data 
-    while True: 
-        time.sleep(1)
-        num = change_to_str(str(current_pos))
-        value = write_read(num)
-    
-run = True
-Up= Button(root, text = "Up",padx = 10, pady = 10, command = move_Up)
-Down= Button(root, text = "Down",padx = 10, pady = 10, command = move_Down)
-Left= Button(root, text = "Left",padx = 10, pady = 10, command = move_Left)
-Right= Button(root, text = "Right",padx = 10, pady = 10, command = move_Right)
+    num = change_to_str(str(current_pos))
+    arduino.write(bytes(num,'utf-8'))
+    time.sleep(0.05)
 
-Up.grid(row = 0, column = 3)
-Down.grid(row =4, column = 3)
-Left.grid(row = 2, column = 0)
-Right.grid(row = 2, column = 4)
 
-threading()
+#Enable or Disable the buttons based on what mode
+def Automatic(): 
+    Up["state"] = "disabled"
+    Down["state"] = "disabled"
+    Left["state"] = "disabled"
+    Right["state"] = "disabled"
+
+def Manual():
+    Up["state"] = "normal"
+    Down["state"] = "normal"
+    Left["state"] = "normal"
+    Right["state"] = "normal"
+
+
+#Buttons for Automatic or Manual mode 
+Automatic_Button = Button(root, text = "Automatic",padx = 10, pady = 10, command = Automatic)
+Manual_Button = Button(root, text = "Manual",padx = 10, pady = 10, command = Manual)
+
+#Buttons for Manual movement of motors
+Up = Button(root, text = "Up",padx = 10, pady = 10, command = lambda: threading(1))
+Down = Button(root, text = "Down",padx = 10, pady = 10, command = lambda: threading(2))
+Left = Button(root, text = "Left",padx = 10, pady = 10, command = lambda: threading(3))
+Right = Button(root, text = "Right",padx = 10, pady = 10, command = lambda: threading(4))
+
+Automatic_Button.grid(row = 1, column = 1)
+Manual_Button.grid(row = 1, column = 2)
+Up.grid(row = 2, column = 2)
+Down.grid(row =4, column = 2)
+Left.grid(row = 3, column = 1)
+Right.grid(row = 3, column = 3)
+
 root.mainloop()
-run = False 
