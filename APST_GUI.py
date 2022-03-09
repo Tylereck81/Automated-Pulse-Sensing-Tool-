@@ -6,6 +6,7 @@ from tkinter import *
 from serial import Serial
 import time 
 import serial.tools.list_ports 
+from threading import *
 
 current_pos = [0,0,0]
 MAX_X = 100
@@ -68,6 +69,25 @@ def move_Right():
     print(current_pos)
 
 
+def threading(): 
+    t1 = Thread(target = arduino_listen, daemon=True)
+    t1.start()
+
+def arduino_listen(): 
+    #Connect to Arduino 
+    arduino = Serial(port='COM3', baudrate= 115200, timeout = .1) 
+    def write_read(x): 
+        print(x)
+        arduino.write(bytes(x,'utf-8'))
+        time.sleep(0.05) 
+        data = arduino.readline() 
+        return data 
+    while True: 
+        time.sleep(1)
+        num = change_to_str(str(current_pos))
+        value = write_read(num)
+    
+run = True
 Up= Button(root, text = "Up",padx = 10, pady = 10, command = move_Up)
 Down= Button(root, text = "Down",padx = 10, pady = 10, command = move_Down)
 Left= Button(root, text = "Left",padx = 10, pady = 10, command = move_Left)
@@ -78,23 +98,6 @@ Down.grid(row =4, column = 3)
 Left.grid(row = 2, column = 0)
 Right.grid(row = 2, column = 4)
 
-
-
-
-#Connect to Arduino 
-arduino = Serial(port='COM3', baudrate= 115200, timeout = .1) 
-def write_read(x): 
-    arduino.write(bytes(x,'utf-8'))
-    time.sleep(0.05) 
-    data = arduino.readline() 
-    return data 
-
-while True: 
-    
-    root.update_idletasks() 
-    num = input("Enter a number: ")
-    #num = change_to_str(str(current_pos))
-    value = write_read(num)
-    #print(value)
-    root.update()
-
+threading()
+root.mainloop()
+run = False 
