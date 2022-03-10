@@ -130,7 +130,5 @@ void loop() {
       Position[i]=t.toInt();
     }
   }
-  //x1= Serial.readString().toInt(); 
   mm_move_stepper(Position[0],Position[1],Position[2]); 
-
 }

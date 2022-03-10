@@ -7,8 +7,10 @@ from serial import Serial
 import time 
 import serial.tools.list_ports 
 from threading import *
+from copy import deepcopy
 
 current_pos = [0,0,0]
+old_pos =[0,0,0]
 MAX_X = 100
 MAX_Y = 100
 MAX_Z = 100
@@ -27,6 +29,7 @@ def change_to_str(str):
     return new_str
 
 def move_Up(): 
+    #global current_pos
     if current_pos[2]>=0: 
         current_pos[2]+=10
         if current_pos[2]>=MAX_Z:
@@ -38,6 +41,7 @@ def move_Up():
     #print(current_pos)
         
 def move_Down():
+   # global current_pos
     if(current_pos[2]>=0): 
         current_pos[2]-=10
         if current_pos[2] <0: 
@@ -48,6 +52,7 @@ def move_Down():
     #print(current_pos)
 
 def move_Left():
+    #global current_pos
     if(current_pos[0]>=0): 
         current_pos[0]-=10
         if current_pos[0] < 0: 
@@ -58,6 +63,7 @@ def move_Left():
     #print(current_pos)
 
 def move_Right():
+   # global current_pos
     if current_pos[0]>=0: 
         current_pos[0]+=10
         if current_pos[0]>=MAX_X:
@@ -68,29 +74,23 @@ def move_Right():
     
     #print(current_pos)
 
-#moves the position based on which button was pressed and then creates
-# a thread to connect to the arduino and move the motor 
-def threading(n): 
-    if n == 1: # move up
-        move_Up()
-    elif n == 2: #move down
-        move_Down()
-    elif n == 3: #move left 
-        move_Left()
-    elif n == 4: #move right
-        move_Right()
-    
-    t1 = Thread(target = arduino_move, daemon=True)
-    t1.start()
-
 
 def arduino_move(): 
     #Connect to Arduino and send the position to move to 
-    arduino = Serial(port='COM3', baudrate= 115200, timeout = .1) 
-    num = change_to_str(str(current_pos))
-    arduino.write(bytes(num,'utf-8'))
-    time.sleep(0.05)
+    arduino = Serial(port='COM3', baudrate= 115200, timeout = .1)
 
+    #only does movement when there is a difference in position (when button is pressed)
+    while True: 
+        global old_pos
+        global current_pos
+        if old_pos != current_pos:
+            num = change_to_str(str(current_pos))
+            old_pos = deepcopy(current_pos)
+            print(num)
+            arduino.write(bytes(num,'utf-8'))
+            time.sleep(0.05)
+            # data = arduino.readline()
+            # print(data)
 
 #Enable or Disable the buttons based on what mode
 def Automatic(): 
@@ -111,10 +111,10 @@ Automatic_Button = Button(root, text = "Automatic",padx = 10, pady = 10, command
 Manual_Button = Button(root, text = "Manual",padx = 10, pady = 10, command = Manual)
 
 #Buttons for Manual movement of motors
-Up = Button(root, text = "Up",padx = 10, pady = 10, command = lambda: threading(1))
-Down = Button(root, text = "Down",padx = 10, pady = 10, command = lambda: threading(2))
-Left = Button(root, text = "Left",padx = 10, pady = 10, command = lambda: threading(3))
-Right = Button(root, text = "Right",padx = 10, pady = 10, command = lambda: threading(4))
+Up = Button(root, text = "Up",padx = 10, pady = 10, command = move_Up)
+Down = Button(root, text = "Down",padx = 10, pady = 10, command = move_Down)
+Left = Button(root, text = "Left",padx = 10, pady = 10, command = move_Left)
+Right = Button(root, text = "Right",padx = 10, pady = 10, command = move_Right)
 
 Automatic_Button.grid(row = 1, column = 1)
 Manual_Button.grid(row = 1, column = 2)
@@ -123,4 +123,8 @@ Down.grid(row =4, column = 2)
 Left.grid(row = 3, column = 1)
 Right.grid(row = 3, column = 3)
 
+t1 = Thread(target = arduino_move, daemon=True)
+t1.start()
+
 root.mainloop()
+
