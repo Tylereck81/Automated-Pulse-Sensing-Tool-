@@ -4,6 +4,9 @@
 
 from tkinter import * 
 from serial import Serial
+import usb.core 
+import usb.util
+import sys
 import time 
 import serial.tools.list_ports 
 from threading import *
@@ -18,6 +21,7 @@ MAX_Z = 100
 #Main Page 
 root = Tk()
 
+#change the current_pos to str '0,0,0'
 def change_to_str(str): 
     new_str = ""
     num = "0123456789"
@@ -27,6 +31,7 @@ def change_to_str(str):
         if str[i] == ",":
             new_str+=","
     return new_str
+
 
 def move_Up(): 
     #global current_pos
@@ -92,6 +97,28 @@ def arduino_move():
             # data = arduino.readline()
             # print(data)
 
+def sensor_read():
+    # vid0403
+    # pid 6001
+    # rev 0600
+    sensor = Serial(port='COM5', baudrate = 256000, bytesize = 8, timeout = 2,stopbits=serial.STOPBITS_ONE)
+    data = sensor.write([0xF0, 0x2F, 0x01, 0x32])
+    print(data)
+    c = 0
+    while(c<1): 
+        serialString = sensor.readline() 
+        n =[] 
+        for i in serialString: 
+            n.append(i)
+            if len(n) == 9: 
+                print(n)
+                n=[]
+        c+=1
+    
+   # sensor.write(sensor.write([0xF0, 0x2F, 0x01, 0x33]))
+    #devs = usb.core.find(idVendor = VID, idProduct = PID)
+    #l = usb.core.find(find_all = True)
+    
 #Enable or Disable the buttons based on what mode
 def Automatic(): 
     Up["state"] = "disabled"
@@ -123,8 +150,8 @@ Down.grid(row =4, column = 2)
 Left.grid(row = 3, column = 1)
 Right.grid(row = 3, column = 3)
 
-t1 = Thread(target = arduino_move, daemon=True)
-t1.start()
+# t1 = Thread(target = arduino_move, daemon=True)
+# t1.start()
+sensor_read()
 
-root.mainloop()
-
+#root.mainloop()

@@ -1,0 +1,8 @@
+USB Sensor : CP210x USB to UART Bridge VCP Drivers 
+ 
+--To install -- 
+1.) Into CP210x_Universal_Windows_Driver
+2.) Right click on silabser, Install 
+3.) To test run "python -m serial.tools.list_ports "
+
+Reference: https://www.silabs.com/documents/public/release-notes/CP210x_Universal_Windows_Driver_ReleaseNotes.txt
