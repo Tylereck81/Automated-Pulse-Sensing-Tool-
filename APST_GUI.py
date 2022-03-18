@@ -150,8 +150,8 @@ Down.grid(row =4, column = 2)
 Left.grid(row = 3, column = 1)
 Right.grid(row = 3, column = 3)
 
-# t1 = Thread(target = arduino_move, daemon=True)
-# t1.start()
-sensor_read()
+t1 = Thread(target = arduino_move, daemon=True)
+t1.start()
+#sensor_read()
 
-#root.mainloop()
+root.mainloop()

@@ -114,21 +114,39 @@ void setup() {
 //  z_stepper.setAccelerationInStepsPerSecondPerSecond(5000);
 
 //  mm_move_home();
-//  mm_move_stepper(300,280,345); //MAX S
-//  mm_move_home(); 
+//  //mm_move_stepper(300,280,345); //MAX S
 //  mm_move_stepper(150,140,172); //HALF 
+//  mm_move_home(); 
 
- 
-}  
+
+}
 
 
 void loop() {
-  while(!Serial.available()); 
-  for(int i = 0; i<3; i++){ 
-    String t = Serial.readStringUntil(','); 
-    if(t!=""){ 
-      Position[i]=t.toInt();
-    }
+  
+  while(!Serial.available());
+  char t[12];
+  String t2 = Serial.readString();
+  t2.toCharArray(t,12);
+  int c = 0; 
+  int Posi = 0;
+  int i = 0;
+  while(c!=3){ 
+    String temp =""; 
+    while(t[i]!=','){
+      temp+=t[i];
+      i++; 
+     }
+     i++;
+     Position[Posi] = temp.toInt();
+     Posi++;
+     c++;
   }
+
+//  for(int i =0; i<3; i++){ 
+//    Serial.println(Position[i]);
+//  }
+    
   mm_move_stepper(Position[0],Position[1],Position[2]); 
+  
 }
