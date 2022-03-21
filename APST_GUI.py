@@ -11,7 +11,7 @@ import time
 import serial.tools.list_ports 
 from threading import *
 from copy import deepcopy
-import serial.tools.list_ports
+
 
 current_pos = [0,0,0]
 old_pos =[0,0,0]
@@ -20,6 +20,13 @@ MAX_Y = 100
 MAX_Z = 100
 global STOP_SCAN
 STOP_SCAN = 0
+global SENSOR_CONNECT
+SENSOR_CONNECT = 0
+global ARDUINO_CONNECT 
+ARDUINO_CONNECT = 0
+global sensor_port 
+global arduino_port
+arduino_port = 'COM3'
 
 
 #Main Page 
@@ -85,8 +92,9 @@ def move_Right():
 
 
 def arduino_move(): 
+    global arduino_port
     #Connect to Arduino and send the position to move to 
-    arduino = Serial(port='COM3', baudrate= 115200, timeout = .1)
+    arduino = Serial(port=arduino_port, baudrate= 115200, timeout = .1)
 
     #only does movement when there is a difference in position (when button is pressed)
     while True: 
@@ -122,7 +130,8 @@ def stop_scan():
 
 
 def sensor_read():
-    sensor = Serial(port='COM5', baudrate = 256000, bytesize = 8, timeout = 2,stopbits=serial.STOPBITS_ONE)
+    global sensor_port
+    sensor = Serial(port= sensor_port, baudrate = 256000, bytesize = 8, timeout = 2,stopbits=serial.STOPBITS_ONE)
     sensor.write([0xF0, 0x2F, 0x01, 0x32])
 
     # while True: 
@@ -146,16 +155,58 @@ def sensor_read():
     sensor.write([0xF0, 0x2F, 0x01, 0x33])
     print('Scan Ended')
 
-def pick_port(): 
-    #list ports 
-    ports = serial.tools.list_ports.comports()
-    for p in ports: 
-        if p[2]!='n/a':
-            print(p, p.hwid) 
-    #VID:PID=10C4:EA60
-    #to connect to sensor and arduino we need to match these VID and PID to show connection 
-    print(len(ports),'ports found')
+#always check if sensor is connected
+def connect_sensor():
+    global SENSOR_CONNECT 
+    global ARDUINO_CONNECT 
+    global sensor_port 
+    global arduino_port
+    while True: 
+        SENSOR_CONNECT = 0
+        ARDUINO_CONNECT = 0
+        ports = serial.tools.list_ports.comports()
+        for p in ports: 
+            #print(p.vid, p.pid)
+            # VID = str(p.hwid)[12:16]
+            # PID = str(p.hwid)[17:21]
+            # if VID == "10C4" and PID == "EA60": #sensor PID and VID
+            #     SENSOR_CONNECT = 1
+            # if VID == "0403" and PID == "6001": #arduino PID and VID
+            #     ARDUINO_CONNECT = 1
 
+            VID = p.vid 
+            PID = p.pid 
+
+            if VID == 4292 and PID == 60000: #sensor PID and VID
+                SENSOR_CONNECT = 1
+                sensor_port = p[0] #get the COM 
+            if VID == 1027 and PID == 24577: #arduino PID and VID
+                ARDUINO_CONNECT = 1
+                arduino_port = p[0] #get the COM 
+
+        #checks if sensor is connected 
+        if SENSOR_CONNECT: 
+            Sensor_Connect_Status.config(text = "Connected")
+            Start_Scan_Button["state"] = "normal" 
+            Stop_Scan_Button["state"] = "normal"
+        else: 
+            Sensor_Connect_Status.config(text = "Disconnected")
+            Start_Scan_Button["state"] = "disabled" 
+            Stop_Scan_Button["state"] = "disabled"
+
+        #if arduino is not connected we disable the movement buttons
+        if ARDUINO_CONNECT: 
+            Arduino_Connect_Status.config(text = "Connected")
+            Up["state"] = "normal"
+            Down["state"] = "normal"
+            Left["state"] = "normal"
+            Right["state"] = "normal"
+        else: 
+            Arduino_Connect_Status.config(text = "Disconnected")
+            Up["state"] = "disabled"
+            Down["state"] = "disabled"
+            Left["state"] = "disabled"
+            Right["state"] = "disabled"
 
 #Enable or Disable the buttons based on what mode
 def Automatic(): 
@@ -193,12 +244,23 @@ Right.grid(row = 3, column = 3)
 Start_Scan_Button.grid(row = 5, column = 0)
 Stop_Scan_Button.grid(row = 5, column = 2)
 
+#Label 
+Sensor_Connect_Label1 = Label(root, text = "Pulse Sensor: ")
+Sensor_Connect_Status = Label(root, text = "Not Connected")
+Sensor_Connect_Label1.grid(row = 6, column = 1)
+Sensor_Connect_Status.grid(row = 6, column = 2)
+
+Arduino_Connect_Label1 = Label(root, text = "Motors: ")
+Arduino_Connect_Status = Label(root, text = "Not Connected")
+Arduino_Connect_Label1.grid(row = 7, column = 1)
+Arduino_Connect_Status.grid(row = 7, column = 2)
 
 def main(): 
-    #t1 = Thread(target = arduino_move, daemon=True)
-    #t1.start()
-    #root.mainloop()
-    pick_port()
+    t1 = Thread(target = arduino_move, daemon=True)
+    t1.start()
+    t2 = Thread(target = connect_sensor, daemon = True)
+    t2.start()
+    root.mainloop()
 
 if __name__ == "__main__": 
     main()
