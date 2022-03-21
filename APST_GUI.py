@@ -11,12 +11,16 @@ import time
 import serial.tools.list_ports 
 from threading import *
 from copy import deepcopy
+import serial.tools.list_ports
 
 current_pos = [0,0,0]
 old_pos =[0,0,0]
 MAX_X = 100
 MAX_Y = 100
 MAX_Z = 100
+global STOP_SCAN
+STOP_SCAN = 0
+
 
 #Main Page 
 root = Tk()
@@ -97,28 +101,54 @@ def arduino_move():
             # data = arduino.readline()
             # print(data)
 
+def start_scan():
+    print('Scan Started')
+
+    #Set stop flag to false
+    global STOP_SCAN
+    STOP_SCAN = 0
+
+    #Make a thread for the sensor to read
+    global SCAN_T 
+    SCAN_T = Thread(target = sensor_read, daemon = True)
+    SCAN_T.start()
+
+def stop_scan(): 
+
+    #Set stop flag to true
+    global STOP_SCAN
+    STOP_SCAN = 1
+
+
+
 def sensor_read():
-    # vid0403
-    # pid 6001
-    # rev 0600
     sensor = Serial(port='COM5', baudrate = 256000, bytesize = 8, timeout = 2,stopbits=serial.STOPBITS_ONE)
-    data = sensor.write([0xF0, 0x2F, 0x01, 0x32])
-    print(data)
-    c = 0
-    while(c<1): 
+    sensor.write([0xF0, 0x2F, 0x01, 0x32])
+
+    # while True: 
+    #     serialString = sensor.readline() 
+    #     n =[] 
+    #     for i in serialString: 
+    #         n.append(i)
+    #         if len(n) == 9: 
+    #             print(n)
+    #             n=[]
+    #     if STOP_SCAN: 
+    #         break
+
+    global STOP_SCAN
+    while True: 
         serialString = sensor.readline() 
-        n =[] 
-        for i in serialString: 
-            n.append(i)
-            if len(n) == 9: 
-                print(n)
-                n=[]
-        c+=1
-    
-   # sensor.write(sensor.write([0xF0, 0x2F, 0x01, 0x33]))
-    #devs = usb.core.find(idVendor = VID, idProduct = PID)
-    #l = usb.core.find(find_all = True)
-    
+        print(serialString)
+        if STOP_SCAN: 
+            break 
+
+    sensor.write([0xF0, 0x2F, 0x01, 0x33])
+    print('Scan Ended')
+
+
+
+
 #Enable or Disable the buttons based on what mode
 def Automatic(): 
     Up["state"] = "disabled"
@@ -137,6 +167,9 @@ def Manual():
 Automatic_Button = Button(root, text = "Automatic",padx = 10, pady = 10, command = Automatic)
 Manual_Button = Button(root, text = "Manual",padx = 10, pady = 10, command = Manual)
 
+Start_Scan_Button = Button(root, text = "Start Scan",padx = 10, pady = 10, command = start_scan)
+Stop_Scan_Button = Button(root, text = "Stop Scan",padx = 10, pady = 10, command = stop_scan)
+
 #Buttons for Manual movement of motors
 Up = Button(root, text = "Up",padx = 10, pady = 10, command = move_Up)
 Down = Button(root, text = "Down",padx = 10, pady = 10, command = move_Down)
@@ -149,9 +182,14 @@ Up.grid(row = 2, column = 2)
 Down.grid(row =4, column = 2)
 Left.grid(row = 3, column = 1)
 Right.grid(row = 3, column = 3)
+Start_Scan_Button.grid(row = 5, column = 0)
+Stop_Scan_Button.grid(row = 5, column = 2)
 
-t1 = Thread(target = arduino_move, daemon=True)
-t1.start()
-#sensor_read()
 
-root.mainloop()
+def main(): 
+    #t1 = Thread(target = arduino_move, daemon=True)
+    #t1.start()
+    root.mainloop()
+
+if __name__ == "__main__": 
+    main()
