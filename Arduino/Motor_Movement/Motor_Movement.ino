@@ -96,15 +96,15 @@ void setup() {
 
   x_stepper.setStepsPerMillimeter(85);
   x_stepper.setSpeedInMillimetersPerSecond(30);
-  x_stepper.setAccelerationInMillimetersPerSecondPerSecond(10); 
+  x_stepper.setAccelerationInMillimetersPerSecondPerSecond(30); 
   
   y_stepper.setStepsPerMillimeter(85);
   y_stepper.setSpeedInMillimetersPerSecond(30);
-  y_stepper.setAccelerationInMillimetersPerSecondPerSecond(10); 
+  y_stepper.setAccelerationInMillimetersPerSecondPerSecond(30); 
 
   z_stepper.setStepsPerMillimeter(400);
   z_stepper.setSpeedInMillimetersPerSecond(30);
-  z_stepper.setAccelerationInMillimetersPerSecondPerSecond(10); 
+  z_stepper.setAccelerationInMillimetersPerSecondPerSecond(30); 
   
 //  x_stepper.setSpeedInStepsPerSecond(5000); 
 //  x_stepper.setAccelerationInStepsPerSecondPerSecond(5000);
@@ -121,13 +121,40 @@ void setup() {
 
 }
 
+bool newData = false;
+char t[12];
+int c = 0;
+void recieve(){ 
+  char endMarker = '\n';
+  char rc; 
+  while(Serial.available() > 0 && newData == false){ 
+    rc = Serial.read(); 
+
+    if(rc!= endMarker){ 
+      t[c] = rc; 
+      c++; 
+    }
+    else{ 
+      t[c] = '\0';
+      c = 0; 
+      newData = true;
+    }
+  }
+}
+
+void showData(){ 
+  if(newData == true){ 
+    Serial.print(t); 
+    newData = false;
+  }
+}
+
 
 void loop() {
   
-  while(!Serial.available());
-  char t[12];
-  String t2 = Serial.readString();
-  t2.toCharArray(t,12);
+ recieve(); 
+ showData();
+ 
   int c = 0; 
   int Posi = 0;
   int i = 0;
@@ -142,6 +169,7 @@ void loop() {
      Posi++;
      c++;
   }
+  
 
 //  for(int i =0; i<3; i++){ 
 //    Serial.println(Position[i]);

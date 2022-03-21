@@ -14,6 +14,9 @@ from copy import deepcopy
 
 
 current_pos = [0,0,0]
+global Move
+Move =""
+Step = 10
 old_pos =[0,0,0]
 MAX_X = 100
 MAX_Y = 100
@@ -45,6 +48,7 @@ def change_to_str(str):
 
 
 def move_Up(): 
+    global Move
     #global current_pos
     if current_pos[2]>=0: 
         current_pos[2]+=10
@@ -54,9 +58,12 @@ def move_Up():
     else:
         current_pos[2] = 0
     
+    Move = "U"+str(Step)
+    print(Move)
     #print(current_pos)
         
 def move_Down():
+    global Move
    # global current_pos
     if(current_pos[2]>=0): 
         current_pos[2]-=10
@@ -65,9 +72,12 @@ def move_Down():
     else:
         current_pos[2] = 0
     
+    Move = "D"+str(Step)
+    print(Move)
     #print(current_pos)
 
 def move_Left():
+    global Move
     #global current_pos
     if(current_pos[0]>=0): 
         current_pos[0]-=10
@@ -76,9 +86,12 @@ def move_Left():
     else:
         current_pos[0] = 0
     
+    Move = "L"+str(Step)
+    print(Move)
     #print(current_pos)
 
 def move_Right():
+    global Move
    # global current_pos
     if current_pos[0]>=0: 
         current_pos[0]+=10
@@ -88,6 +101,8 @@ def move_Right():
     else:
         current_pos[0] = 0
     
+    Move = "R"+str(Step)
+    print(Move)
     #print(current_pos)
 
 
@@ -102,12 +117,14 @@ def arduino_move():
         global current_pos
         if old_pos != current_pos:
             num = change_to_str(str(current_pos))
+            num = num +"\n";
             old_pos = deepcopy(current_pos)
             print(num)
-            arduino.write(bytes(num,'utf-8'))
+            #arduino.write(num.encode())
+            arduino.write(num.encode())
             time.sleep(0.05)
-            # data = arduino.readline()
-            # print(data)
+            data = arduino.readline()
+            print(data)
 
 def start_scan():
     print('Scan Started')
