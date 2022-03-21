@@ -146,7 +146,15 @@ def sensor_read():
     sensor.write([0xF0, 0x2F, 0x01, 0x33])
     print('Scan Ended')
 
-
+def pick_port(): 
+    #list ports 
+    ports = serial.tools.list_ports.comports()
+    for p in ports: 
+        if p[2]!='n/a':
+            print(p, p.hwid) 
+    #VID:PID=10C4:EA60
+    #to connect to sensor and arduino we need to match these VID and PID to show connection 
+    print(len(ports),'ports found')
 
 
 #Enable or Disable the buttons based on what mode
@@ -189,7 +197,8 @@ Stop_Scan_Button.grid(row = 5, column = 2)
 def main(): 
     #t1 = Thread(target = arduino_move, daemon=True)
     #t1.start()
-    root.mainloop()
+    #root.mainloop()
+    pick_port()
 
 if __name__ == "__main__": 
     main()
