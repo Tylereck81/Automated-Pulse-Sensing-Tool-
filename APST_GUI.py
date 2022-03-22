@@ -117,7 +117,7 @@ def arduino_move():
         global current_pos
         if old_pos != current_pos:
             num = change_to_str(str(current_pos))
-            num = num +"\n"
+            num = "("+ num +")"
             old_pos = deepcopy(current_pos)
             print(num)
             arduino.write(num.encode())

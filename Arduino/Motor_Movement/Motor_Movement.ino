@@ -30,6 +30,7 @@ const int MAX_X_VALUE = 280;
 const int MAX_Y_VALUE = 280; 
 const int MAX_Z_VALUE = 245; 
 
+//MIDDLE FOR SENSOR: 150,140,245 
 
 
 //void move_stepper(int x,int y, int z){ 
@@ -123,17 +124,20 @@ mm_move_home();
 }
 
 bool newData = false;
-char t[12]={'\0'};
+char t[15]={'\0'};
 int c = 0;
 void recieve(){ 
-  char endMarker ='\n';
+  char endMarker =')';
+  char begMarker='(';
   char rc; 
   while(Serial.available() > 0 && newData == false){ 
     rc = Serial.read(); 
 
-    if(rc!= endMarker){ 
-      t[c] = rc; 
-      c++; 
+    if(rc!= endMarker){
+      if(rc!=begMarker){
+        t[c] = rc; 
+        c++; 
+      }
     }
     else{ 
       t[c] = '\0';
