@@ -18,9 +18,9 @@ global Move
 Move =""
 Step = 10
 old_pos =[0,0,0]
-MAX_X = 100
-MAX_Y = 100
-MAX_Z = 100
+MAX_X = 250
+MAX_Y = 250
+MAX_Z = 300
 global STOP_SCAN
 STOP_SCAN = 0
 global SENSOR_CONNECT
@@ -51,7 +51,7 @@ def move_Up():
     global Move
     #global current_pos
     if current_pos[2]>=0: 
-        current_pos[2]+=10
+        current_pos[2]+=Step
         if current_pos[2]>=MAX_Z:
             current_pos[2] = MAX_Z
 
@@ -59,42 +59,42 @@ def move_Up():
         current_pos[2] = 0
     
     Move = "U"+str(Step)
-    print(Move)
+    #print(Move)
     #print(current_pos)
         
 def move_Down():
     global Move
    # global current_pos
     if(current_pos[2]>=0): 
-        current_pos[2]-=10
+        current_pos[2]-=Step
         if current_pos[2] <0: 
             current_pos[2] = 0
     else:
         current_pos[2] = 0
     
     Move = "D"+str(Step)
-    print(Move)
+    #print(Move)
     #print(current_pos)
 
 def move_Left():
     global Move
     #global current_pos
     if(current_pos[0]>=0): 
-        current_pos[0]-=10
+        current_pos[0]-=Step
         if current_pos[0] < 0: 
             current_pos[0] = 0
     else:
         current_pos[0] = 0
     
     Move = "L"+str(Step)
-    print(Move)
+    #print(Move)
     #print(current_pos)
 
 def move_Right():
     global Move
    # global current_pos
     if current_pos[0]>=0: 
-        current_pos[0]+=10
+        current_pos[0]+=Step
         if current_pos[0]>=MAX_X:
             current_pos[0] = MAX_X
 
@@ -102,7 +102,7 @@ def move_Right():
         current_pos[0] = 0
     
     Move = "R"+str(Step)
-    print(Move)
+    #print(Move)
     #print(current_pos)
 
 
@@ -117,14 +117,13 @@ def arduino_move():
         global current_pos
         if old_pos != current_pos:
             num = change_to_str(str(current_pos))
-            num = num +"\n";
+            num = num +"\n"
             old_pos = deepcopy(current_pos)
             print(num)
-            #arduino.write(num.encode())
             arduino.write(num.encode())
-            time.sleep(0.05)
-            data = arduino.readline()
-            print(data)
+            #time.sleep(0.5)
+            # data = arduino.readline()
+            # print(data)
 
 def start_scan():
     print('Scan Started')
@@ -148,26 +147,31 @@ def stop_scan():
 
 def sensor_read():
     global sensor_port
-    sensor = Serial(port= sensor_port, baudrate = 256000, bytesize = 8, timeout = 2,stopbits=serial.STOPBITS_ONE)
+    global STOP_SCAN
+    sensor = Serial(port= sensor_port, 
+    baudrate = 256000, 
+    parity = serial.PARITY_NONE,
+    bytesize = 8, stopbits=serial.STOPBITS_ONE)
     sensor.write([0xF0, 0x2F, 0x01, 0x32])
+    # sensor.write([0xF0, 0x2F, 0x01, 0x34]) # Set the pressure value to zero
+
+    n =[]
+    while True: 
+        serialString = sensor.read()
+        temp = int.from_bytes(serialString, byteorder=sys.byteorder)
+        
+        n.append(temp)
+        if len(n) == 9: 
+            print(n)
+            n=[]
+        if STOP_SCAN: 
+            break
 
     # while True: 
     #     serialString = sensor.readline() 
-    #     n =[] 
-    #     for i in serialString: 
-    #         n.append(i)
-    #         if len(n) == 9: 
-    #             print(n)
-    #             n=[]
+    #     print(int(serialString))
     #     if STOP_SCAN: 
-    #         break
-
-    global STOP_SCAN
-    while True: 
-        serialString = sensor.readline() 
-        print(serialString)
-        if STOP_SCAN: 
-            break 
+    #         break 
 
     sensor.write([0xF0, 0x2F, 0x01, 0x33])
     print('Scan Ended')

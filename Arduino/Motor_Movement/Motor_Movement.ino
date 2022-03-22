@@ -26,9 +26,9 @@ SpeedyStepper z_stepper;
 
 
 //Max Millimeter(mm) values that can be applied (300,280,245)
-const int MAX_X_VALUE = 300; 
+const int MAX_X_VALUE = 280; 
 const int MAX_Y_VALUE = 280; 
-const int MAX_Z_VALUE = 345; 
+const int MAX_Z_VALUE = 245; 
 
 
 
@@ -118,14 +118,15 @@ void setup() {
 //  mm_move_stepper(150,140,172); //HALF 
 //  mm_move_home(); 
 
+mm_move_home();
 
 }
 
 bool newData = false;
-char t[12];
+char t[12]={'\0'};
 int c = 0;
 void recieve(){ 
-  char endMarker = '\n';
+  char endMarker ='\n';
   char rc; 
   while(Serial.available() > 0 && newData == false){ 
     rc = Serial.read(); 
@@ -143,8 +144,8 @@ void recieve(){
 }
 
 void showData(){ 
-  if(newData == true){ 
-    Serial.print(t); 
+  if(newData == true){
+    Serial.println(t);
     newData = false;
   }
 }
@@ -169,12 +170,8 @@ void loop() {
      Posi++;
      c++;
   }
-  
 
-//  for(int i =0; i<3; i++){ 
-//    Serial.println(Position[i]);
-//  }
-    
+
   mm_move_stepper(Position[0],Position[1],Position[2]); 
   
 }
