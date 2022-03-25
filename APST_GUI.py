@@ -2,7 +2,7 @@
 #Automated Pulse Sensing Tool 
 #3rd Year Undergraduate Project 
 
-from tkinter import * 
+from tkinter import *
 from serial import Serial
 import usb.core 
 import usb.util
@@ -11,6 +11,14 @@ import time
 import serial.tools.list_ports 
 from threading import *
 from copy import deepcopy
+import matplotlib.pyplot as plt
+import csv 
+import pandas as pd
+from matplotlib.animation import FuncAnimation
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, 
+NavigationToolbar2Tk)
+
 
 
 current_pos = [0,0,0]
@@ -30,6 +38,14 @@ ARDUINO_CONNECT = 0
 global sensor_port 
 global arduino_port
 arduino_port = 'COM3'
+global READING
+READING = 0
+
+Measure = { 
+    "X":[], 
+    "Pressure":[],
+    "Pulse":[]
+}
 
 
 #Main Page 
@@ -58,9 +74,6 @@ def move_Up():
     else:
         current_pos[2] = 0
     
-    Move = "U"+str(Step)
-    #print(Move)
-    #print(current_pos)
         
 def move_Down():
     global Move
@@ -72,9 +85,6 @@ def move_Down():
     else:
         current_pos[2] = 0
     
-    Move = "D"+str(Step)
-    #print(Move)
-    #print(current_pos)
 
 def move_Left():
     global Move
@@ -86,9 +96,6 @@ def move_Left():
     else:
         current_pos[0] = 0
     
-    Move = "L"+str(Step)
-    #print(Move)
-    #print(current_pos)
 
 def move_Right():
     global Move
@@ -101,17 +108,12 @@ def move_Right():
     else:
         current_pos[0] = 0
     
-    Move = "R"+str(Step)
-    #print(Move)
-    #print(current_pos)
 
 
 def arduino_move(): 
     global arduino_port
-    #Connect to Arduino and send the position to move to 
     arduino = Serial(port=arduino_port, baudrate= 115200, timeout = .1)
 
-    #only does movement when there is a difference in position (when button is pressed)
     while True: 
         global old_pos
         global current_pos
@@ -137,34 +139,58 @@ def start_scan():
     SCAN_T = Thread(target = sensor_read, daemon = True)
     SCAN_T.start()
 
+    plot_sensor_data()
+
 def stop_scan(): 
 
     #Set stop flag to true
     global STOP_SCAN
     STOP_SCAN = 1
+    plt.clf()
+    Measure["X"]=[]
+    Measure["Pressure"] =[] 
+    Measure["Pulse"] = []
+
 
 
 
 def sensor_read():
     global sensor_port
     global STOP_SCAN
-    sensor = Serial(port= sensor_port, 
+    global READING
+    sensor = Serial(port= 'COM5', 
     baudrate = 256000, 
     parity = serial.PARITY_NONE,
     bytesize = 8, stopbits=serial.STOPBITS_ONE)
     sensor.write([0xF0, 0x2F, 0x01, 0x32])
     # sensor.write([0xF0, 0x2F, 0x01, 0x34]) # Set the pressure value to zero
 
+    #SENSOR DATA- first 4 values stay the same 
+    #[0xF0,0x1F,0x06,0x32,JYL,JYM,MBL,MBH,CHECK] 
+    #JYL - Low byte of pressure 
+    #JYH - High byte of pressure 
+    #MBL - Low byte of pulse wave 
+    #MBH - High byte of pulse wave 
+    #CHECK - Low byte of (JYL+JYH+MBL+MBH)
+
     n =[]
+    X = 0 
+    Pressure = 0 
+    Pulse = 0
     while True: 
         serialString = sensor.read()
         temp = int.from_bytes(serialString, byteorder=sys.byteorder)
-        
         n.append(temp)
-        if len(n) == 9: 
-            print(n)
-            n=[]
-        if STOP_SCAN: 
+        if len(n) == 9:
+
+            Pressure = (n[5]<<8)|n[4]
+            Pulse = (n[7]<<8)|n[6]
+            Measure["X"].append(X) 
+            Measure["Pressure"].append(Pressure)
+            Measure["Pulse"].append(Pulse)
+            X+=1
+            n=[]        
+        if STOP_SCAN:
             break
 
     # while True: 
@@ -175,6 +201,29 @@ def sensor_read():
 
     sensor.write([0xF0, 0x2F, 0x01, 0x33])
     print('Scan Ended')
+
+def plot_sensor_data(): 
+
+    def animate(i):
+        x = Measure["X"]
+        Pressure = Measure["Pressure"] 
+        Pulse = Measure["Pulse"]
+
+        plt.cla()
+
+        plt.plot(x, Pulse, label ='Pulse')
+        plt.plot(x, Pressure, label ='Pressure')
+
+        plt.legend(loc = "upper left")
+        plt.tight_layout()
+
+    ani = FuncAnimation(plt.gcf(),animate, interval=1)
+    plt.show()
+
+        
+        
+
+
 
 #always check if sensor is connected
 def connect_sensor():
@@ -276,11 +325,23 @@ Arduino_Connect_Status = Label(root, text = "Not Connected")
 Arduino_Connect_Label1.grid(row = 7, column = 1)
 Arduino_Connect_Status.grid(row = 7, column = 2)
 
+
+# fig = Figure(figsize = (5,5),dpi = 100)
+# a = fig.add_subplot(111)
+
+# canvas = FigureCanvasTkAgg(fig, master = root)
+# canvas.draw()
+# canvas.get_tk_widget().grid(row = 10, column = 0)
+
+
 def main(): 
-    t1 = Thread(target = arduino_move, daemon=True)
-    t1.start()
+    # t1 = Thread(target = arduino_move, daemon=True)
+    # t1.start()
     t2 = Thread(target = connect_sensor, daemon = True)
-    t2.start()
+    t2.start() 
+
+    #plot_sensor_data()
+
     root.mainloop()
 
 if __name__ == "__main__": 
