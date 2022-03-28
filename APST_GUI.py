@@ -181,10 +181,28 @@ def sensor_read():
         serialString = sensor.read()
         temp = int.from_bytes(serialString, byteorder=sys.byteorder)
         n.append(temp)
+        # if len(n) == 9:
+        #    # print(n)
+        #     Pressure = (n[5]<<8)|n[4]
+        #     Pulse = (n[7]<<8)|n[6]
+        #     Measure["X"].append(X) 
+        #     Measure["Pressure"].append(Pressure)
+        #     Measure["Pulse"].append(Pulse)
+
+        #     data = np.append(data,Pulse)
+
+        #     lines.set_xdata(np.arange(0,len(data))) 
+        #     lines.set_ydata(data)
+        #     canvas.draw()
+
+        #     X+=1
+        #     n=[]
+
         if len(n) == 9:
 
             Pressure = (n[5]<<8)|n[4]
             Pulse = (n[7]<<8)|n[6]
+            print(Pulse)
             Measure["X"].append(X) 
             Measure["Pressure"].append(Pressure)
             Measure["Pulse"].append(Pulse)
