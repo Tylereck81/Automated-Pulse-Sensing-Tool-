@@ -184,7 +184,7 @@ def sensor_read():
         if len(n) == 9:
 
             Pressure = (n[5]<<8)|n[4]
-            Pulse = (n[7]<<8)|n[6]
+            Pulse = int(((n[7]<<8)|n[6])/25)
             Measure["X"].append(X) 
             Measure["Pressure"].append(Pressure)
             Measure["Pulse"].append(Pulse)
