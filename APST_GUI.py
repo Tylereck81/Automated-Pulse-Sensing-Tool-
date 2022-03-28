@@ -18,7 +18,6 @@ from matplotlib.animation import FuncAnimation
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, 
 NavigationToolbar2Tk)
-import numpy as np
 
 
 
@@ -140,7 +139,7 @@ def start_scan():
     SCAN_T = Thread(target = sensor_read, daemon = True)
     SCAN_T.start()
 
-    #plot_sensor_data()
+    plot_sensor_data()
 
 def stop_scan(): 
 
@@ -178,45 +177,19 @@ def sensor_read():
     X = 0 
     Pressure = 0 
     Pulse = 0
-    data = np.array([])
-
-    global fig,ax,canvas,line
-
     while True: 
         serialString = sensor.read()
         temp = int.from_bytes(serialString, byteorder=sys.byteorder)
         n.append(temp)
         if len(n) == 9:
-           # print(n)
+
             Pressure = (n[5]<<8)|n[4]
             Pulse = (n[7]<<8)|n[6]
             Measure["X"].append(X) 
             Measure["Pressure"].append(Pressure)
             Measure["Pulse"].append(Pulse)
-
-            if(len(data) >100): 
-                data = np.append(data,Pulse)
-            else: 
-                data[0:99] = data[1:100] 
-                data[100] = Pulse
-
-            line.set_xdata(np.arange(0,len(data))) 
-            line.set_ydata(data)
-            canvas.draw()
-
             X+=1
-            n=[]
-
-        # if len(n) == 9:
-
-        #     Pressure = (n[5]<<8)|n[4]
-        #     Pulse = int (((n[7]<<8)|n[6])/25)
-        #     print(Pulse)
-        #     Measure["X"].append(X) 
-        #     Measure["Pressure"].append(Pressure)
-        #     Measure["Pulse"].append(Pulse)
-        #     X+=1
-        #     n=[]        
+            n=[]        
         if STOP_SCAN:
             break
 
@@ -229,23 +202,23 @@ def sensor_read():
     sensor.write([0xF0, 0x2F, 0x01, 0x33])
     print('Scan Ended')
 
-# def plot_sensor_data(): 
+def plot_sensor_data(): 
 
-#     def animate(i):
-#         x = Measure["X"]
-#         Pressure = Measure["Pressure"] 
-#         Pulse = Measure["Pulse"]
+    def animate(i):
+        x = Measure["X"]
+        Pressure = Measure["Pressure"] 
+        Pulse = Measure["Pulse"]
 
-#         plt.cla()
+        plt.cla()
 
-#         plt.plot(x, Pulse, label ='Pulse')
-#         plt.plot(x, Pressure, label ='Pressure')
+        plt.plot(x, Pulse, label ='Pulse')
+        plt.plot(x, Pressure, label ='Pressure')
 
-#         plt.legend(loc = "upper left")
-#         plt.tight_layout()
+        plt.legend(loc = "upper left")
+        plt.tight_layout()
 
-#     ani = FuncAnimation(plt.gcf(),animate, interval=1)
-#     plt.show()
+    ani = FuncAnimation(plt.gcf(),animate, interval=1)
+    plt.show()
 
         
         
@@ -352,14 +325,13 @@ Arduino_Connect_Status = Label(root, text = "Not Connected")
 Arduino_Connect_Label1.grid(row = 7, column = 1)
 Arduino_Connect_Status.grid(row = 7, column = 2)
 
-global fig,ax,canvas,line
-fig = Figure(figsize = (5,5),dpi = 100)
-ax = fig.add_subplot(111)
-line, = ax.plot([],[])[0]
 
-canvas = FigureCanvasTkAgg(fig, master = root)
-canvas.draw()
-canvas.get_tk_widget().grid(row = 10, column = 0)
+# fig = Figure(figsize = (5,5),dpi = 100)
+# a = fig.add_subplot(111)
+
+# canvas = FigureCanvasTkAgg(fig, master = root)
+# canvas.draw()
+# canvas.get_tk_widget().grid(row = 10, column = 0)
 
 
 def main(): 
