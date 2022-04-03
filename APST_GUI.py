@@ -25,6 +25,7 @@ import numpy as np
 current_pos = [0,0,0]
 global Move
 Move =""
+global Step
 Step = 10
 old_pos =[0,0,0]
 MAX_X = 250
@@ -127,7 +128,7 @@ def arduino_move():
             old_pos = deepcopy(current_pos)
             print(num)
             arduino.write(num.encode())
-            #time.sleep(0.5)
+            # time.sleep(0.5)
             # data = arduino.readline()
             # print(data)
 
@@ -311,6 +312,18 @@ def Manual():
     Left["state"] = "normal"
     Right["state"] = "normal"
 
+def Set_Step():
+    global Step
+    IN = step_to_move.get("1.0","end-1c")
+    Step = int(IN)
+
+l = Label(text = "Step to Move") 
+step_to_move = Text(root, height = 2, width = 2)
+set_step = Button(root, text = "set", padx =10, pady = 10, command = Set_Step)
+
+l.grid(row = 1, column = 9) 
+step_to_move.grid(row = 2, column = 9)
+set_step.grid(row = 2, column = 10)
 
 #Buttons for Automatic or Manual mode 
 Automatic_Button = Button(root, text = "Automatic",padx = 10, pady = 10, command = Automatic)
@@ -355,8 +368,8 @@ Arduino_Connect_Status.grid(row = 7, column = 2)
 
 
 def main(): 
-    # t1 = Thread(target = arduino_move, daemon=True)
-    # t1.start()
+    t1 = Thread(target = arduino_move, daemon=True)
+    t1.start()
     t2 = Thread(target = connect_sensor, daemon = True)
     t2.start() 
 
