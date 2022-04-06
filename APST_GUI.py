@@ -226,16 +226,17 @@ def sensor_read():
 def plot_sensor_data(): 
 
     def animate(i):
-        x1 = np.arange(0,len(Pressure_graph))
-        x2 = np.arange(0,len(Pulse_graph))
+        x = Measure["X"]
+        Pressure = Measure["Pressure"] 
+        Pulse = Measure["Pulse"]
 
         Pressure = Pressure_graph
         Pulse = Pulse_graph
 
         plt.cla()
 
-        plt.plot(x2, Pulse, label ='Pulse')
-        plt.plot(x1, Pressure, label ='Pressure')
+        plt.plot(x, Pulse, label ='Pulse')
+        plt.plot(x, Pressure, label ='Pressure')
 
         plt.legend(loc = "upper left")
         plt.tight_layout()
