@@ -2,7 +2,9 @@
 #Automated Pulse Sensing Tool 
 #3rd Year Undergraduate Project 
 
+from re import A
 from tkinter import *
+from turtle import left
 from serial import Serial
 import usb.core 
 import usb.util
@@ -18,7 +20,9 @@ from matplotlib.animation import FuncAnimation
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, 
 NavigationToolbar2Tk)
-
+from matplotlib.widgets import Button as b
+global ani
+from PIL import Image, ImageTk
 
 
 current_pos = [0,0,0]
@@ -52,8 +56,6 @@ Pulse_graph = []
 
 
 
-#Main Page 
-root = Tk()
 
 #change the current_pos to str '0,0,0'
 def change_to_str(str): 
@@ -131,13 +133,15 @@ def arduino_move():
             # data = arduino.readline()
             # print(data)
 
-def start_scan():
+
+ 
+def start_scan(val):
     print('Scan Started')
 
     #Set stop flag to false
     global STOP_SCAN
     STOP_SCAN = 0
-
+    plt.cla()
     #Make a thread for the sensor to read
     global SCAN_T 
     SCAN_T = Thread(target = sensor_read, daemon = True)
@@ -145,12 +149,13 @@ def start_scan():
 
     plot_sensor_data()
 
-def stop_scan(): 
-
+def stop_scan(val): 
+    global ani
+    global plt
     #Set stop flag to true
     global STOP_SCAN
     STOP_SCAN = 1
-    plt.clf()
+
     Measure["X"]=[]
     Measure["Pressure"] =[] 
     Measure["Pulse"] = []
@@ -158,8 +163,21 @@ def stop_scan():
     Pulse_graph = []
 
 
+    ani.pause()
+
+    plt.savefig('test.png')
+    show_figure()
+    plt.close()
+    # Measure["X"]=[]
+    # Measure["Pressure"] =[] 
+    # Measure["Pulse"] = []
 
 
+def show_figure():
+    load= Image.open("test.png")
+    render = ImageTk.PhotoImage(load)
+    img.configure(image = render)
+    img.image = render
 
 def sensor_read():
     global sensor_port
@@ -223,24 +241,28 @@ def sensor_read():
 
 def plot_sensor_data(): 
 
+    global plt
+    ax = plt.subplot(111)
     def animate(i):
         x = Measure["X"]
         Pressure = Measure["Pressure"] 
         Pulse = Measure["Pulse"]
 
-        plt.cla()
+        ax.cla()
 
-        plt.plot(x, Pulse, label ='Pulse')
-        plt.plot(x, Pressure, label ='Pressure')
+        ax.plot(x, Pulse, label ='Pulse')
+        ax.plot(x, Pressure, label ='Pressure')
 
-        plt.legend(loc = "upper left")
-        plt.tight_layout()
+        ax.legend(loc = "upper left")
 
+    # Position of the button 
+    axcut1 = plt.axes([0.9, 0.00001, 0.1, 0.1])
+    bcut1 = b(axcut1, 'Stop')
+    bcut1.on_clicked(stop_scan)
+
+    global ani
     ani = FuncAnimation(plt.gcf(),animate, interval=1)
     plt.show()
-
-        
-        
 
 
 
@@ -311,46 +333,66 @@ def Manual():
     Right["state"] = "normal"
 
 
+#Main Page 
+root = Tk()
+root.title("Automated Pulse Sensing Tool")
+root.maxsize(900,600) 
+root.config(bg = "skyblue")
+
+left_frame = Frame(root, width=200, height=400, bg='grey')
+left_frame.grid(row=0, column=0, padx=10, pady=5)
+
+right_frame = Frame(root, width=650, height=400, bg='grey')
+right_frame.grid(row=0, column=1, padx=10, pady=5)
+
+
+load= Image.open("test.png")
+render = ImageTk.PhotoImage(load)
+img = Label(right_frame, image=render)
+img.grid(row = 0, column = 0)
+
 #Buttons for Automatic or Manual mode 
-Automatic_Button = Button(root, text = "Automatic",padx = 10, pady = 10, command = Automatic)
-Manual_Button = Button(root, text = "Manual",padx = 10, pady = 10, command = Manual)
+Label(left_frame,text="Mode").grid(row=0, column=0, padx=5, pady=5)
+Mode = Frame(left_frame, width = 150, height = 100)
+Mode.grid(row = 1, column = 0)
+Automatic_Button = Button(Mode, text = "Automatic",padx = 10, pady = 10, command = Automatic)
+Manual_Button = Button(Mode, text = "Manual",padx = 10, pady = 10, command = Manual)
+Automatic_Button.grid(row = 0 , column = 0)
+Manual_Button.grid(row = 0 , column = 1)
 
-Start_Scan_Button = Button(root, text = "Start Scan",padx = 10, pady = 10, command = start_scan)
-Stop_Scan_Button = Button(root, text = "Stop Scan",padx = 10, pady = 10, command = stop_scan)
+#Buttons for Movement
+Label(left_frame,text="Movement").grid(row=2, column=0, padx=5, pady=5)
+Movement = Frame(left_frame, width = 150, height = 100)
+Movement.grid(row = 3, column = 0)
+Up = Button(Movement, text = "Up",padx = 10, pady = 10, command = move_Up)
+Down = Button(Movement, text = "Down",padx = 10, pady = 10, command = move_Down)
+Left = Button(Movement, text = "Left",padx = 10, pady = 10, command = move_Left)
+Right = Button(Movement, text = "Right",padx = 10, pady = 10, command = move_Right)
+Up.grid(row = 0, column = 1)
+Down.grid(row = 2, column = 1)
+Left.grid(row = 1, column = 0)
+Right.grid(row = 1, column = 2)
 
-#Buttons for Manual movement of motors
-Up = Button(root, text = "Up",padx = 10, pady = 10, command = move_Up)
-Down = Button(root, text = "Down",padx = 10, pady = 10, command = move_Down)
-Left = Button(root, text = "Left",padx = 10, pady = 10, command = move_Left)
-Right = Button(root, text = "Right",padx = 10, pady = 10, command = move_Right)
+#Buttons for Scan Buttons
+Label(left_frame,text="Scan").grid(row=4, column=0, padx=5, pady=5)
+Scan = Frame(left_frame, width = 150, height = 100)
+Scan.grid(row = 5, column = 0)
+Start_Scan_Button = Button(Scan, text = "Start",padx = 10, pady = 10, command = lambda: start_scan(1))
+Stop_Scan_Button = Button(Scan, text = "Stop",padx = 10, pady = 10, command = stop_scan)
+Start_Scan_Button.grid(row = 0 ,column = 0)
+Stop_Scan_Button.grid(row = 0, column = 1)
 
-Automatic_Button.grid(row = 1, column = 1)
-Manual_Button.grid(row = 1, column = 2)
-Up.grid(row = 2, column = 2)
-Down.grid(row =4, column = 2)
-Left.grid(row = 3, column = 1)
-Right.grid(row = 3, column = 3)
-Start_Scan_Button.grid(row = 5, column = 0)
-Stop_Scan_Button.grid(row = 5, column = 2)
 
-#Label 
-Sensor_Connect_Label1 = Label(root, text = "Pulse Sensor: ")
+
+Label(root, text = "Pulse Sensor: ").grid(row = 1, column = 0)
 Sensor_Connect_Status = Label(root, text = "Not Connected")
-Sensor_Connect_Label1.grid(row = 6, column = 1)
-Sensor_Connect_Status.grid(row = 6, column = 2)
+Sensor_Connect_Status.grid(row = 1, column = 1)
 
-Arduino_Connect_Label1 = Label(root, text = "Motors: ")
+Label(root, text = "Motors: ").grid(row = 2, column = 0)
 Arduino_Connect_Status = Label(root, text = "Not Connected")
-Arduino_Connect_Label1.grid(row = 7, column = 1)
-Arduino_Connect_Status.grid(row = 7, column = 2)
+Arduino_Connect_Status.grid(row = 2, column = 1)
 
 
-# fig = Figure(figsize = (5,5),dpi = 100)
-# a = fig.add_subplot(111)
-
-# canvas = FigureCanvasTkAgg(fig, master = root)
-# canvas.draw()
-# canvas.get_tk_widget().grid(row = 10, column = 0)
 
 
 def main(): 
