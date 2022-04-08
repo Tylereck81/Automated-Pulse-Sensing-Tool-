@@ -47,6 +47,10 @@ Measure = {
     "Pulse":[]
 }
 
+Pressure_graph = [] 
+Pulse_graph = []
+
+
 
 #Main Page 
 root = Tk()
@@ -150,6 +154,9 @@ def stop_scan():
     Measure["X"]=[]
     Measure["Pressure"] =[] 
     Measure["Pulse"] = []
+    Pressure_graph = [] 
+    Pulse_graph = []
+
 
 
 
@@ -188,6 +195,18 @@ def sensor_read():
             Measure["X"].append(X) 
             Measure["Pressure"].append(Pressure)
             Measure["Pulse"].append(Pulse)
+
+            if len(Pressure_graph) < 100: 
+                Pressure_graph.append(Pressure) 
+            else: 
+                Pressure_graph[0:99] = Pressure_graph[1:100] 
+                Pressure_graph[99] = Pressure
+
+            if len(Pulse_graph) < 100: 
+                Pulse_graph.append(Pulse) 
+            else: 
+                Pulse_graph[0:99] = Pulse_graph[1:100] 
+                Pulse_graph[99] = Pulse
             X+=1
             n=[]        
         if STOP_SCAN:
