@@ -23,6 +23,8 @@ NavigationToolbar2Tk)
 from matplotlib.widgets import Button as b
 global ani
 from PIL import Image, ImageTk
+import cv2 
+import numpy as np
 
 
 current_pos = [0,0,0]
@@ -208,8 +210,8 @@ def sensor_read():
         n.append(temp)
         if len(n) == 9:
 
-            Pressure = (n[5]<<8)|n[4]
-            Pulse = (n[7]<<8)|n[6]
+            Pressure = n[5]<<8|n[4]
+            Pulse = int(((n[7]<<8)|n[6])/25)
             Measure["X"].append(X) 
             Measure["Pressure"].append(Pressure)
             Measure["Pulse"].append(Pulse)
@@ -299,11 +301,9 @@ def connect_sensor():
         if SENSOR_CONNECT: 
             Sensor_Connect_Status.config(text = "Connected")
             Start_Scan_Button["state"] = "normal" 
-            Stop_Scan_Button["state"] = "normal"
         else: 
             Sensor_Connect_Status.config(text = "Disconnected")
             Start_Scan_Button["state"] = "disabled" 
-            Stop_Scan_Button["state"] = "disabled"
 
         #if arduino is not connected we disable the movement buttons
         if ARDUINO_CONNECT: 
@@ -332,11 +332,23 @@ def Manual():
     Left["state"] = "normal"
     Right["state"] = "normal"
 
+def show_frames(): 
+
+   retval, frame = cap.read()
+   left = np.split(frame, 2,axis = 1)
+   cv2image= cv2.cvtColor(left[0],cv2.COLOR_BGR2RGB)
+   img2 = Image.fromarray(cv2image)
+   # Convert image to PhotoImage
+   imgtk = ImageTk.PhotoImage(image = img2)
+   Cam_View.imgtk = imgtk
+   Cam_View.configure(image=imgtk)
+   # Repeat after an interval to capture continiously
+   Cam_View.after(20, show_frames)
 
 #Main Page 
 root = Tk()
 root.title("Automated Pulse Sensing Tool")
-root.maxsize(900,600) 
+root.maxsize(1000,800) 
 root.config(bg = "skyblue")
 
 left_frame = Frame(root, width=200, height=400, bg='grey')
@@ -344,53 +356,61 @@ left_frame.grid(row=0, column=0, padx=10, pady=5)
 
 right_frame = Frame(root, width=650, height=400, bg='grey')
 right_frame.grid(row=0, column=1, padx=10, pady=5)
-
-
 load= Image.open("test.png")
 render = ImageTk.PhotoImage(load)
 img = Label(right_frame, image=render)
 img.grid(row = 0, column = 0)
 
+
+#Camera View 
+cam = Frame(left_frame,width = 300 ,height = 200, padx = 10, pady = 10, bg = 'blue')
+cam.grid(row = 0, column = 0)
+Label(cam, text="Camera View").grid(row = 0, column = 0,padx = 5, pady = 5)
+cap = cv2.VideoCapture(0)
+Cam_View = Label(cam, height = 200, width = 300) 
+Cam_View.grid(row = 1, column = 0)
+show_frames()
+
 #Buttons for Automatic or Manual mode 
-Label(left_frame,text="Mode").grid(row=0, column=0, padx=5, pady=5)
-Mode = Frame(left_frame, width = 150, height = 100)
+Mode = Frame(left_frame, width = 150, height = 100, padx=10, pady=10,  bg ='green')
 Mode.grid(row = 1, column = 0)
+Label(Mode,text="Mode").grid(row=0, column=0, padx = 40, pady = 10)
 Automatic_Button = Button(Mode, text = "Automatic",padx = 10, pady = 10, command = Automatic)
-Manual_Button = Button(Mode, text = "Manual",padx = 10, pady = 10, command = Manual)
-Automatic_Button.grid(row = 0 , column = 0)
-Manual_Button.grid(row = 0 , column = 1)
+Manual_Button = Button(Mode, text = "Manual", padx = 10, pady = 10, command = Manual)
+Automatic_Button.grid(row = 0 , column = 5)
+Manual_Button.grid(row = 0 , column = 6)
 
 #Buttons for Movement
-Label(left_frame,text="Movement").grid(row=2, column=0, padx=5, pady=5)
-Movement = Frame(left_frame, width = 150, height = 100)
-Movement.grid(row = 3, column = 0)
+Movement = Frame(left_frame, width = 150, height = 100, bg = "purple")
+Movement.grid(row = 2, column = 0)
+Label(Movement,text="Movement").grid(row=1, column=0, padx=40, pady=10)
 Up = Button(Movement, text = "Up",padx = 10, pady = 10, command = move_Up)
 Down = Button(Movement, text = "Down",padx = 10, pady = 10, command = move_Down)
 Left = Button(Movement, text = "Left",padx = 10, pady = 10, command = move_Left)
 Right = Button(Movement, text = "Right",padx = 10, pady = 10, command = move_Right)
-Up.grid(row = 0, column = 1)
-Down.grid(row = 2, column = 1)
-Left.grid(row = 1, column = 0)
-Right.grid(row = 1, column = 2)
+Up.grid(row = 0, column = 2)
+Down.grid(row = 2, column = 2)
+Left.grid(row = 1, column = 1)
+Right.grid(row = 1, column = 3)
 
-#Buttons for Scan Buttons
-Label(left_frame,text="Scan").grid(row=4, column=0, padx=5, pady=5)
-Scan = Frame(left_frame, width = 150, height = 100)
-Scan.grid(row = 5, column = 0)
-Start_Scan_Button = Button(Scan, text = "Start",padx = 10, pady = 10, command = lambda: start_scan(1))
-Stop_Scan_Button = Button(Scan, text = "Stop",padx = 10, pady = 10, command = stop_scan)
+
+#Button for Scanning
+Scan = Frame(left_frame, width = 150, height = 100,bg = "red")
+Scan.grid(row = 3, column = 0)
+
+Settings = Frame(Scan, width = 150, height = 100, padx = 50, pady = 10 ,bg = "orange")
+Settings.grid(row = 0, column = 0)
+Label(Settings, text = "Pulse Sensor: ").grid(row = 0, column = 0)
+Sensor_Connect_Status = Label(Settings, text = "Not Connected")
+Sensor_Connect_Status.grid(row = 0, column = 1)
+Label(Settings, text = "Motors: ").grid(row = 1, column = 0)
+Arduino_Connect_Status = Label(Settings, text = "Not Connected")
+Arduino_Connect_Status.grid(row = 1, column = 1)
+
+Scan_B = Frame(Scan, width = 150, height = 100,bg = "black")
+Scan_B.grid(row = 0, column = 1)
+Start_Scan_Button = Button(Scan_B, text = "Scan",padx = 10, pady = 10, command = lambda: start_scan(1))
 Start_Scan_Button.grid(row = 0 ,column = 0)
-Stop_Scan_Button.grid(row = 0, column = 1)
-
-
-
-Label(root, text = "Pulse Sensor: ").grid(row = 1, column = 0)
-Sensor_Connect_Status = Label(root, text = "Not Connected")
-Sensor_Connect_Status.grid(row = 1, column = 1)
-
-Label(root, text = "Motors: ").grid(row = 2, column = 0)
-Arduino_Connect_Status = Label(root, text = "Not Connected")
-Arduino_Connect_Status.grid(row = 2, column = 1)
 
 
 
