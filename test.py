@@ -10,6 +10,7 @@ import sys
 import time 
 import serial.tools.list_ports 
 from threading import *
+from matplotlib.widgets import Slider
 from copy import deepcopy
 from matplotlib.ft2font import HORIZONTAL
 import matplotlib.pyplot as plt
@@ -17,8 +18,7 @@ import csv
 import pandas as pd
 from matplotlib.animation import FuncAnimation
 from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, 
-NavigationToolbar2Tk)
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.widgets import Button as b
 from PIL import Image, ImageTk
 import cv2 
@@ -130,6 +130,12 @@ def arduino_move():
 def start_scan(val):
     print('Scan Started')
 
+    Measure["X"]=[]
+    Measure["Pressure"] =[] 
+    Measure["Pulse"] = []
+    Pressure_graph = [] 
+    Pulse_graph = []
+
     #Set stop flag to false
     global STOP_SCAN
     STOP_SCAN = 0
@@ -148,17 +154,26 @@ def stop_scan(val):
     global STOP_SCAN
     STOP_SCAN = 1
 
-    Measure["X"]=[]
-    Measure["Pressure"] =[] 
-    Measure["Pulse"] = []
-    Pressure_graph = [] 
-    Pulse_graph = []
-
     ani.pause()
-
-    plt.savefig('test1.png')
-    show_figure()
     plt.close()
+
+    figure = plt.Figure(figsize = (6,5), dpi = 100)
+    ax1 = figure.add_subplot(111) 
+    bar1 = FigureCanvasTkAgg(figure, right_frame)
+    bar1.get_tk_widget().place(x = 25, y = 20)
+
+    x = Measure["X"]
+    Pressure = Measure["Pressure"] 
+    Pulse = Measure["Pulse"]
+
+    ax1.plot(x, Pulse, label ='Pulse')
+    ax1.plot(x, Pressure, label ='Pressure')
+
+    bar1.draw()
+    
+    # plt.savefig('test1.png')
+    # show_figure()
+    # plt.close()
 
 
 
@@ -300,11 +315,11 @@ def connect_sensor():
             Left["state"] = "disabled"
             Right["state"] = "disabled"
 
-def show_figure():
-    load= Image.open("test1.png")
-    render = ImageTk.PhotoImage(load)
-    img.configure(image = render)
-    img.image = render
+# def show_figure():
+#     load= Image.open("test1.png")
+#     render = ImageTk.PhotoImage(load)
+#     img.configure(image = render)
+#     img.image = render
 
 def show_frames():
    global is_on
@@ -402,13 +417,23 @@ right_frame = tk.Frame(root, width = 650, height = 700, bg = "grey")
 right_frame.place(x = 350, y = 0)
 
 
-# frame2 = ttk.LabelFrame(root, text='--', width=650, height=500)
-# frame2.place(x=350, y=12)
+# load = Image.open("test1.png")
+# render = ImageTk.PhotoImage(load)
+# img =tk.Label(right_frame, image = render)
+# img.place(x = 4, y = 5)
 
-load = Image.open("test1.png")
-render = ImageTk.PhotoImage(load)
-img =tk.Label(right_frame, image = render)
-img.place(x = 4, y = 5)
+figure = plt.Figure(figsize = (6,5), dpi = 100)
+ax1 = figure.add_subplot(111) 
+bar1 = FigureCanvasTkAgg(figure, right_frame)
+bar1.get_tk_widget().place(x = 25, y = 20)
+
+x = Measure["X"]
+Pressure = Measure["Pressure"] 
+Pulse = Measure["Pulse"]
+
+ax1.plot(x, Pulse, label ='Pulse')
+ax1.plot(x, Pressure, label ='Pressure')
+plt.show()
 
 
 def main(): 
