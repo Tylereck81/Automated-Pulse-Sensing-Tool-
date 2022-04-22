@@ -346,12 +346,20 @@ def upload_scan():
     nameinfo.delete('1.0', tk.END)
     descriptioninfo.delete('1.0', tk.END)
     print("Scan uploaded")
+
+def scale(i):
+    global g
+    g.set(int(scale.get()))
+    Step_Value.config(text=str(int(scale.get())))
     
 root = tk.Tk()
 root.title('Automated Pulse Sensing Tool')
 
 window_height = 700
 window_width = 1000
+
+g = tk.IntVar()
+g.set(50)
 
 screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
@@ -379,7 +387,7 @@ switch.place(x=90, y=200)
 is_on = False
 
 
-frame2 = ttk.LabelFrame(root, text='Options', width=320, height=300)
+frame2 = ttk.LabelFrame(root, text='Options', width=320, height=320)
 frame2.place(x=20, y=270)
 
 Mode_label = tk.Label(frame2, text='Mode') 
@@ -403,17 +411,35 @@ Left.place(x = 140+ix, y = 90+iy)
 Right.place(x= 200+ix, y = 90+iy)
 Down.place(x = 170+ix, y = 120+iy)
 
+
+Step_Label = tk.Label(frame2, text = "Steps")
+Step_Label.place(x= 50, y = 180)
+
+scale = ttk.Scale(frame2, from_=0, to=100, variable=g, command=scale)
+scale.place(x=150, y=180)
+
+Step_Value  = tk.Label(frame2, text= str(int(g.get())))
+Step_Value.place(x = 250, y = 180)
+
+
+
 Sensor_Connect_Label = tk.Label(frame2, text = "Pulse Sensor: ")
 Arduino_Connect_Label = tk.Label(frame2, text = "Motors: ")
 Sensor_Connect_Status = tk.Label(frame2, text = "Not Connected")
 Arduino_Connect_Status = tk.Label(frame2, text = "Not Connected")
-Sensor_Connect_Label.place(x = 10, y = 200)
-Arduino_Connect_Label.place(x = 10, y = 220)
-Sensor_Connect_Status.place(x = 100, y = 200)
-Arduino_Connect_Status.place(x = 100, y = 220)
+Sensor_Connect_Label.place(x = 10, y = 230)
+Arduino_Connect_Label.place(x = 10, y = 250)
+Sensor_Connect_Status.place(x = 100, y = 230)
+Arduino_Connect_Status.place(x = 100, y = 250)
 
 Scan_B = ttk.Button(frame2, text='Scan', style='Accentbutton', command = lambda: start_scan(1))
-Scan_B.place(x=200, y=205)
+Scan_B.place(x=185, y=235)
+
+
+
+
+
+
 
 right_frame = tk.Frame(root, width = 650, height = 700, bg = "grey")
 right_frame.place(x = 350, y = 0)
@@ -453,6 +479,9 @@ descriptioninfo.place(x =150, y = 590)
 
 Upload = ttk.Button(right_frame, text = "Upload", style="Accentbutton",command = upload_scan)
 Upload.place(x = 30, y = 650)
+
+
+
 
 def main(): 
     # t1 = Thread(target = arduino_move, daemon=True)
