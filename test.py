@@ -36,6 +36,7 @@ is_on = True
 mode = "Manual"
 
 current_pos = [0,0,0]
+old_pos =[0,0,0]
 Move =""
 Step = 50
 MAX_X = 250
@@ -124,7 +125,7 @@ def arduino_move():
             old_pos = deepcopy(current_pos)
             print(num)
             arduino.write(num.encode())
-            #time.sleep(0.5)
+            time.sleep(0.5)
             # data = arduino.readline()
             # print(data)
 
@@ -345,9 +346,26 @@ def switch_camera():
         is_on = True
 
 def upload_scan():
-    if len(nameinfo.get('1.0',tk.END)) == 1:
-        messagebox.showinfo("Error", "Please Enter Name of Scan")
+    if len(nameinfo.get('1.0',tk.END)) == 1 or len(descriptioninfo.get('1.0',tk.END)) == 1:
+        messagebox.showinfo("Error", "Please Enter Name and Description for Scan Before Uploading")
     else: 
+        Name = nameinfo.get('1.0', 'end-1c')
+        Description = descriptioninfo.get('1.0', 'end-1c')
+
+        file = open(Name+".txt", "a")
+        file.write("Name: "+ Name+"\n\n")
+        file.write("Description: " + Description+"\n\n")
+        file.write("Pulse Data Set: \n") 
+        for i in range(len(Measure["X"])): 
+            file.write(str(Measure["X"][i])+" : "+ str(Measure["Pulse"][i])+"\n")
+        file.write("\n\n")
+
+        file.write("Pressure Data Set: \n") 
+        for i in range(len(Measure["X"])): 
+            file.write(str(Measure["X"][i])+" : "+str(Measure["Pressure"][i])+"\n")
+        
+        file.close()
+
         nameinfo.delete('1.0', tk.END)
         descriptioninfo.delete('1.0', tk.END)
         print("Scan uploaded")
@@ -424,7 +442,7 @@ Step_Label = tk.Label(frame2, text = "Steps")
 Step_Label.place(x= 50, y = 180)
 
 scale = ttk.Scale(frame2, from_=0, to=100, variable=g, command=scale)
-scale.place(x=150, y=180)
+scale.place(x=150, y=183)
 
 Step_Value  = tk.Label(frame2, text= str(int(g.get())))
 Step_Value.place(x = 250, y = 180)
@@ -474,26 +492,26 @@ Scan_Label = tk.Label(right_frame, text = "Scan Information",fg = "black", bg = 
 Scan_Label.place(x = 25, y = 530)
 
 Name_Label = tk.Label(right_frame, text = "Name",fg = "black", bg = "grey", font = ("Arial", 13) )
-Name_Label.place(x = 25, y = 555)
+Name_Label.place(x = 130, y = 565)
 
-nameinfo = tk.Text(right_frame, height = 1,width = 78, bg = "white", fg = "black", insertbackground="black")
-nameinfo.place(x = 150, y = 560)
+nameinfo = tk.Text(right_frame, height = 1,width = 73, bg = "white", fg = "black", insertbackground="black")
+nameinfo.place(x = 180, y = 570)
 
 Description_Label = tk.Label(right_frame, text = "Description",fg = "black", bg = "grey", font = ("Arial", 13) )
-Description_Label.place(x = 25, y = 585)
+Description_Label.place(x = 88, y = 595)
 
-descriptioninfo = tk.Text(right_frame, height = 6,width = 78, bg = "white", fg = "black", insertbackground="black")
-descriptioninfo.place(x =150, y = 590)
+descriptioninfo = tk.Text(right_frame, height = 6,width = 73, bg = "white", fg = "black", insertbackground="black")
+descriptioninfo.place(x =180, y = 595)
 
 Upload = ttk.Button(right_frame, text = "Upload", style="Accentbutton",command = upload_scan)
-Upload.place(x = 30, y = 650)
+Upload.place(x = 30, y = 660)
 
 
 
 
 def main(): 
-    # t1 = Thread(target = arduino_move, daemon=True)
-    # t1.start()
+    t1 = Thread(target = arduino_move, daemon=True)
+    t1.start()
     t2 = Thread(target = connect_sensor, daemon = True)
     t2.start() 
 
