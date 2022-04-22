@@ -1,6 +1,8 @@
+from email import message
 from select import select
 import tkinter as tk
 from tkinter import ttk
+from tkinter import messagebox
 from re import A
 from turtle import left
 from serial import Serial
@@ -35,7 +37,7 @@ mode = "Manual"
 
 current_pos = [0,0,0]
 Move =""
-Step = 10
+Step = 50
 MAX_X = 250
 MAX_Y = 250
 MAX_Z = 300
@@ -342,14 +344,19 @@ def switch_camera():
     else: 
         is_on = True
 
-def upload_scan(): 
-    nameinfo.delete('1.0', tk.END)
-    descriptioninfo.delete('1.0', tk.END)
-    print("Scan uploaded")
+def upload_scan():
+    if len(nameinfo.get("1.0",tk.END)) != "\n":
+        messagebox.showinfo("Error", "Please Enter Name of Scan")
+    else: 
+        nameinfo.delete('1.0', tk.END)
+        descriptioninfo.delete('1.0', tk.END)
+        print("Scan uploaded")
 
 def scale(i):
     global g
+    global Step
     g.set(int(scale.get()))
+    Step = int(g.get())
     Step_Value.config(text=str(int(scale.get())))
     
 root = tk.Tk()
@@ -360,6 +367,7 @@ window_width = 1000
 
 g = tk.IntVar()
 g.set(50)
+Step = int(g.get())
 
 screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
