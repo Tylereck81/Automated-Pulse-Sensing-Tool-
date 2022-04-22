@@ -168,7 +168,6 @@ def stop_scan(val):
 
     ax1.plot(x, Pulse, label ='Pulse')
     ax1.plot(x, Pressure, label ='Pressure')
-
     bar1.draw()
     
     # plt.savefig('test1.png')
@@ -343,7 +342,10 @@ def switch_camera():
     else: 
         is_on = True
 
-
+def upload_scan(): 
+    nameinfo.delete('1.0', tk.END)
+    descriptioninfo.delete('1.0', tk.END)
+    print("Scan uploaded")
     
 root = tk.Tk()
 root.title('Automated Pulse Sensing Tool')
@@ -416,7 +418,6 @@ Scan_B.place(x=200, y=205)
 right_frame = tk.Frame(root, width = 650, height = 700, bg = "grey")
 right_frame.place(x = 350, y = 0)
 
-
 # load = Image.open("test1.png")
 # render = ImageTk.PhotoImage(load)
 # img =tk.Label(right_frame, image = render)
@@ -433,8 +434,25 @@ Pulse = Measure["Pulse"]
 
 ax1.plot(x, Pulse, label ='Pulse')
 ax1.plot(x, Pressure, label ='Pressure')
-plt.show()
 
+
+Scan_Label = tk.Label(right_frame, text = "Scan Information",fg = "black", bg = "grey", font = ("Arial", 15) )
+Scan_Label.place(x = 25, y = 530)
+
+Name_Label = tk.Label(right_frame, text = "Name",fg = "black", bg = "grey", font = ("Arial", 13) )
+Name_Label.place(x = 25, y = 555)
+
+nameinfo = tk.Text(right_frame, height = 1,width = 78, bg = "white", fg = "black", insertbackground="black")
+nameinfo.place(x = 150, y = 560)
+
+Description_Label = tk.Label(right_frame, text = "Description",fg = "black", bg = "grey", font = ("Arial", 13) )
+Description_Label.place(x = 25, y = 585)
+
+descriptioninfo = tk.Text(right_frame, height = 6,width = 78, bg = "white", fg = "black", insertbackground="black")
+descriptioninfo.place(x =150, y = 590)
+
+Upload = ttk.Button(right_frame, text = "Upload", style="Accentbutton",command = upload_scan)
+Upload.place(x = 30, y = 650)
 
 def main(): 
     # t1 = Thread(target = arduino_move, daemon=True)

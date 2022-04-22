@@ -44,8 +44,6 @@ ARDUINO_CONNECT = 0
 global sensor_port 
 global arduino_port
 arduino_port = 'COM3'
-global READING
-READING = 0
 
 Measure = { 
     "X":[], 
@@ -167,7 +165,7 @@ def stop_scan(val):
 
     ani.pause()
 
-    plt.savefig('test.png')
+    plt.savefig('test1.png')
     show_figure()
     plt.close()
     # Measure["X"]=[]
@@ -176,7 +174,7 @@ def stop_scan(val):
 
 
 def show_figure():
-    load= Image.open("test.png")
+    load= Image.open("test1.png")
     render = ImageTk.PhotoImage(load)
     img.configure(image = render)
     img.image = render
@@ -356,7 +354,7 @@ left_frame.grid(row=0, column=0, padx=10, pady=5)
 
 right_frame = Frame(root, width=650, height=400, bg='grey')
 right_frame.grid(row=0, column=1, padx=10, pady=5)
-load= Image.open("test.png")
+load= Image.open("test1.png")
 render = ImageTk.PhotoImage(load)
 img = Label(right_frame, image=render)
 img.grid(row = 0, column = 0)

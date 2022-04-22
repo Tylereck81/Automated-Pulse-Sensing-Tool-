@@ -16,7 +16,7 @@ t = np.arange(0.0, 100.0, 0.1)
 s = np.sin(2*np.pi*t)
  
 # plot the x and y using plot function
-l = plt.plot(t, s)
+plt.plot(t, s)
  
 # Choose the Slider color
 slider_color = 'White'
@@ -25,7 +25,7 @@ slider_color = 'White'
 axis_position = plt.axes([0.2, 0.1, 0.65, 0.03],
                          facecolor = slider_color)
 slider_position = Slider(axis_position,
-                         'Pos', 0.1, 90.0)
+                         'Pos', 0.1, 100.0)
  
 # update() function to change the graph when the
 # slider is in use
@@ -37,5 +37,4 @@ def update(val):
 # update function called using on_changed() function
 slider_position.on_changed(update)
  
-# Display the plot
 plt.show()
