@@ -345,7 +345,7 @@ def switch_camera():
         is_on = True
 
 def upload_scan():
-    if len(nameinfo.get("1.0",tk.END)) != "\n":
+    if len(nameinfo.get('1.0',tk.END)) == 1:
         messagebox.showinfo("Error", "Please Enter Name of Scan")
     else: 
         nameinfo.delete('1.0', tk.END)
