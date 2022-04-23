@@ -52,6 +52,8 @@ Measure = {
 Pressure_graph = [] 
 Pulse_graph = []
 
+global ax, ax2
+
 
 
 #change the current_pos to str '0,0,0'
@@ -131,6 +133,10 @@ def arduino_move():
 
     
 def start_scan(val):
+    global Pressure_graph
+    global Pulse_graph
+    global STOP_SCAN
+
     print('Scan Started')
 
     Measure["X"]=[]
@@ -140,11 +146,9 @@ def start_scan(val):
     Pulse_graph = []
 
     #Set stop flag to false
-    global STOP_SCAN
     STOP_SCAN = 0
-    plt.cla()
+
     #Make a thread for the sensor to read
-    global SCAN_T 
     SCAN_T = Thread(target = sensor_read, daemon = True)
     SCAN_T.start()
 
@@ -153,15 +157,19 @@ def start_scan(val):
 def stop_scan(val): 
     global ani
     global plt
+    global Pressure_graph
+    global Pulse_graph
+
+    Pressure_graph = [] 
+    Pulse_graph = []
+
     #Set stop flag to true
     global STOP_SCAN
     STOP_SCAN = 1
-
-    ani.pause()
     plt.close()
 
     figure = plt.Figure(figsize = (6,5), dpi = 100)
-    ax1 = figure.add_subplot(111) 
+    ax2 = figure.add_subplot(111) 
     bar1 = FigureCanvasTkAgg(figure, right_frame)
     bar1.get_tk_widget().place(x = 25, y = 20)
 
@@ -169,8 +177,8 @@ def stop_scan(val):
     Pressure = Measure["Pressure"] 
     Pulse = Measure["Pulse"]
 
-    ax1.plot(x, Pulse, label ='Pulse')
-    ax1.plot(x, Pressure, label ='Pressure')
+    ax2.plot(x, Pulse, label ='Pulse')
+    ax2.plot(x, Pressure, label ='Pressure')
     bar1.draw()
     
     # plt.savefig('test1.png')
@@ -182,7 +190,9 @@ def stop_scan(val):
 def sensor_read():
     global sensor_port
     global STOP_SCAN
-    global READING
+    global Pressure_graph
+    global Pulse_graph
+
     sensor = Serial(port= 'COM5', 
     baudrate = 256000, 
     parity = serial.PARITY_NONE,
@@ -202,6 +212,7 @@ def sensor_read():
     X = 0 
     Pressure = 0 
     Pulse = 0
+    displaynumber  = 1000
     while True: 
         serialString = sensor.read()
         temp = int.from_bytes(serialString, byteorder=sys.byteorder)
@@ -214,17 +225,18 @@ def sensor_read():
             Measure["Pressure"].append(Pressure)
             Measure["Pulse"].append(Pulse)
 
-            if len(Pressure_graph) < 100: 
+            
+            if len(Pressure_graph) < displaynumber: 
                 Pressure_graph.append(Pressure) 
             else: 
-                Pressure_graph[0:99] = Pressure_graph[1:100] 
-                Pressure_graph[99] = Pressure
+                Pressure_graph[0:displaynumber-1] = Pressure_graph[1:displaynumber] 
+                Pressure_graph[displaynumber-1] = Pressure
 
-            if len(Pulse_graph) < 100: 
+            if len(Pulse_graph) < displaynumber: 
                 Pulse_graph.append(Pulse) 
             else: 
-                Pulse_graph[0:99] = Pulse_graph[1:100] 
-                Pulse_graph[99] = Pulse
+                Pulse_graph[0:displaynumber-1] = Pulse_graph[1:displaynumber] 
+                Pulse_graph[displaynumber-1] = Pulse
             X+=1
             n=[]        
         if STOP_SCAN:
@@ -242,16 +254,26 @@ def sensor_read():
 def plot_sensor_data(): 
 
     global plt
+    global ax
     ax = plt.subplot(111)
     def animate(i):
-        x = Measure["X"]
-        Pressure = Measure["Pressure"] 
-        Pulse = Measure["Pulse"]
+        # x = Measure["X"]
+        # Pressure = Measure["Pressure"] 
+        # Pulse = Measure["Pulse"]
+
+        
+        x = np.arange(0, len(Pressure_graph))
+        # Pressure = Pressure_graph 
+        # Pulse = Pulse_graph
+
+        Pressure = deepcopy(Pressure_graph)
+        Pulse = deepcopy(Pulse_graph)
 
         ax.cla()
-
+        
         ax.plot(x, Pulse, label ='Pulse')
         ax.plot(x, Pressure, label ='Pressure')
+        
 
         ax.legend(loc = "upper left")
 
@@ -476,7 +498,7 @@ right_frame.place(x = 350, y = 0)
 # img.place(x = 4, y = 5)
 
 figure = plt.Figure(figsize = (6,5), dpi = 100)
-ax1 = figure.add_subplot(111) 
+ax2 = figure.add_subplot(111) 
 bar1 = FigureCanvasTkAgg(figure, right_frame)
 bar1.get_tk_widget().place(x = 25, y = 20)
 
@@ -484,8 +506,8 @@ x = Measure["X"]
 Pressure = Measure["Pressure"] 
 Pulse = Measure["Pulse"]
 
-ax1.plot(x, Pulse, label ='Pulse')
-ax1.plot(x, Pressure, label ='Pressure')
+ax2.plot(x, Pulse, label ='Pulse')
+ax2.plot(x, Pressure, label ='Pressure')
 
 
 Scan_Label = tk.Label(right_frame, text = "Scan Information",fg = "black", bg = "grey", font = ("Arial", 15) )
