@@ -55,6 +55,8 @@ Pulse_graph = []
 
 global ax, ax2
 
+global start,end
+
 
 
 #change the current_pos to str '0,0,0'
@@ -369,6 +371,7 @@ def switch_camera():
         is_on = True
 
 def upload_scan():
+    global start, end
     if len(nameinfo.get('1.0',tk.END)) == 1 or len(descriptioninfo.get('1.0',tk.END)) == 1:
         messagebox.showinfo("Error", "Please Enter Name and Description for Scan Before Uploading")
     else: 
@@ -379,12 +382,12 @@ def upload_scan():
         file.write("Name: "+ Name+"\n\n")
         file.write("Description: " + Description+"\n\n")
         file.write("Pulse Data Set: \n") 
-        for i in range(len(Measure["X"])): 
+        for i in range(start,end): 
             file.write(str(Measure["X"][i])+" : "+ str(Measure["Pulse"][i])+"\n")
         file.write("\n\n")
 
         file.write("Pressure Data Set: \n") 
-        for i in range(len(Measure["X"])): 
+        for i in range(start,end): 
             file.write(str(Measure["X"][i])+" : "+str(Measure["Pressure"][i])+"\n")
         
         file.close()
@@ -400,20 +403,45 @@ def scale(i):
     Step = int(g.get())
     Step_Value.config(text=str(int(scale.get())))
 
+def finish_edit_scan(val):
+    global start,end
+    print("Start: ", start) 
+    print("End: ", end)
+
+    global plt
+    plt.close()
+
+    figure = plt.Figure(figsize = (6,5), dpi = 100)
+    ax2 = figure.add_subplot(111) 
+    bar1 = FigureCanvasTkAgg(figure, right_frame)
+    bar1.get_tk_widget().place(x = 25, y = 20)
+
+    x = Measure["X"][start:end]
+    Pressure = Measure["Pressure"][start:end]
+    Pulse = Measure["Pulse"][start:end]
+
+    ax2.plot(x, Pulse, label ='Pulse')
+    ax2.plot(x, Pressure, label ='Pressure')
+    bar1.draw()
+
 
 def open_scan():
     Plot, Axis = plt.subplots()
     plt.subplots_adjust(bottom=0.25)
     global start, end
-    start = 0 
-    end = 0 
+    
 
     x = Measure["X"]
     Pulse = Measure["Pulse"]
     global line2
     line1, = Axis.plot(x, Pulse)
 
+    start = 0 
+    end = len(Measure["X"]) 
+
     global removeflag
+    global doubleclick
+    doubleclick = 0 
     removeflag = 0
     def onclick(event):
         global start
@@ -422,8 +450,8 @@ def open_scan():
         y = event.ydata
         global line2
         global removeflag
-        
-
+        global doubleclick
+    
         if event.inaxes:
             if y>1:
                 if event.button is MouseButton.LEFT:
@@ -433,8 +461,23 @@ def open_scan():
                         line2.remove()
                         Plot.canvas.draw_idle()
                         removeflag= 0
+
+                    if not doubleclick:
+                        line2 = Axis.axvspan(start, start+1, color='red', alpha=0.5)
+                        Plot.canvas.draw_idle()
+                        doubleclick = 1
+                    else: 
+                        line2.remove()
+                        Plot.canvas.draw_idle()
+                        line2 = Axis.axvspan(start, start+1, color='red', alpha=0.5)
+                        Plot.canvas.draw_idle()
+
+
                 elif event.button is MouseButton.RIGHT:
                     end = int(x)
+                    line2.remove()
+                    Plot.canvas.draw_idle()
+                    doubleclick = 0
 
                 if start!=0 and end!=0:
                     line2 = Axis.axvspan(start, end, color='red', alpha=0.5)
@@ -482,6 +525,9 @@ def open_scan():
             Axis.axis([pos, pos+1000, min-10, max+10])
             Plot.canvas.draw_idle()
 
+    axcut1 = plt.axes([0.9, 0.00001, 0.1, 0.1])
+    bcut1 = b(axcut1, 'Finish')
+    bcut1.on_clicked(finish_edit_scan)
 
     slider_position.on_changed(update)
     plt.show()
@@ -629,8 +675,8 @@ Upload.place(x = 30, y = 660)
 
 
 def main(): 
-    t1 = Thread(target = arduino_move, daemon=True)
-    t1.start()
+    # t1 = Thread(target = arduino_move, daemon=True)
+    # t1.start()
     t2 = Thread(target = connect_sensor, daemon = True)
     t2.start() 
 
