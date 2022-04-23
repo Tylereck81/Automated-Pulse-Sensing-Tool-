@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 from re import A
-from turtle import left
+from turtle import left, right
 from serial import Serial
 import usb.core 
 import usb.util
@@ -398,7 +398,59 @@ def scale(i):
     g.set(int(scale.get()))
     Step = int(g.get())
     Step_Value.config(text=str(int(scale.get())))
+
+
+def open_scan():
+    Plot, Axis = plt.subplots()
+    plt.subplots_adjust(bottom=0.25)
     
+    x = Measure["X"]
+    Pulse = Measure["Pulse"]
+    
+    plt.plot(x, Pulse)
+    
+    slider_color = 'White'
+    axis_position = plt.axes([0.2, 0.1, 0.65, 0.03],
+                            facecolor = slider_color)
+    slider_position = Slider(axis_position,
+                            'Pos', 1, len(x))
+    
+   
+    # update() function to change the graph when the
+    # slider is in use
+    def update(val):
+        pos = slider_position.val
+        index = int(pos)
+        
+        if(index+1000<len(Pulse)):
+            max = 0 
+            min = 1000
+            for i in range(index, index+1000): 
+                if Measure["Pulse"][i] >max: 
+                    max = Measure["Pulse"][i]
+                if Measure["Pulse"][i] < min: 
+                    min = Measure["Pulse"][i]
+        
+            Axis.axis([pos, pos+1000, min-30, max+30])
+            Plot.canvas.draw_idle()
+        else:
+            max = 0 
+            min = 1000
+            for i in range(index, len(x)): 
+                if Measure["Pulse"][i] >max: 
+                    max = Measure["Pulse"][i]
+                if Measure["Pulse"][i] < min: 
+                    min = Measure["Pulse"][i]
+
+            Axis.axis([pos, pos+1000, min-30, max+30])
+            Plot.canvas.draw_idle()
+
+    
+    # update function called using on_changed() function
+    slider_position.on_changed(update)
+    
+    plt.show()
+
 root = tk.Tk()
 root.title('Automated Pulse Sensing Tool')
 
@@ -492,6 +544,10 @@ Scan_B.place(x=185, y=235)
 right_frame = tk.Frame(root, width = 650, height = 700, bg = "grey")
 right_frame.place(x = 350, y = 0)
 
+# figure_frame = tk.Frame(right_frame, height = 500, width = 600)
+# figure_frame.place(x = 25, y =20)
+# figure_frame.bind("<Button-1>", open_scan)
+
 # load = Image.open("test1.png")
 # render = ImageTk.PhotoImage(load)
 # img =tk.Label(right_frame, image = render)
@@ -508,6 +564,9 @@ Pulse = Measure["Pulse"]
 
 ax2.plot(x, Pulse, label ='Pulse')
 ax2.plot(x, Pressure, label ='Pressure')
+
+OpenGraph = ttk.Button(right_frame, text = "Open Graph", style="Accentbutton",command = open_scan)
+OpenGraph.place(x = 500, y = 530)
 
 
 Scan_Label = tk.Label(right_frame, text = "Scan Information",fg = "black", bg = "grey", font = ("Arial", 15) )
