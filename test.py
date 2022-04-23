@@ -16,6 +16,7 @@ from matplotlib.widgets import Slider
 from copy import deepcopy
 from matplotlib.ft2font import HORIZONTAL
 import matplotlib.pyplot as plt
+from matplotlib.backend_bases import MouseButton
 import csv 
 import pandas as pd
 from matplotlib.animation import FuncAnimation
@@ -403,19 +404,55 @@ def scale(i):
 def open_scan():
     Plot, Axis = plt.subplots()
     plt.subplots_adjust(bottom=0.25)
-    
+    global start, end
+    start = 0 
+    end = 0 
+
     x = Measure["X"]
     Pulse = Measure["Pulse"]
+    global line2
+    line1, = Axis.plot(x, Pulse)
+
+    global removeflag
+    removeflag = 0
+    def onclick(event):
+        global start
+        global end
+        x = event.xdata 
+        y = event.ydata
+        global line2
+        global removeflag
+        
+
+        if event.inaxes:
+            if y>1:
+                if event.button is MouseButton.LEFT:
+                    start = int(x)
+                    end = 0
+                    if removeflag:
+                        line2.remove()
+                        Plot.canvas.draw_idle()
+                        removeflag= 0
+                elif event.button is MouseButton.RIGHT:
+                    end = int(x)
+
+                if start!=0 and end!=0:
+                    line2 = Axis.axvspan(start, end, color='red', alpha=0.5)
+                    Plot.canvas.draw_idle()
+                    removeflag = 1
+
+    plt.connect('button_press_event', onclick)
     
-    plt.plot(x, Pulse)
+
     
     slider_color = 'White'
     axis_position = plt.axes([0.2, 0.1, 0.65, 0.03],
                             facecolor = slider_color)
     slider_position = Slider(axis_position,
-                            'Pos', 1, len(x))
+                            'Pos', 1, len(x)-1000)
     
-   
+    
+
     # update() function to change the graph when the
     # slider is in use
     def update(val):
@@ -431,7 +468,7 @@ def open_scan():
                 if Measure["Pulse"][i] < min: 
                     min = Measure["Pulse"][i]
         
-            Axis.axis([pos, pos+1000, min-30, max+30])
+            Axis.axis([pos, pos+1000, min-10, max+10])
             Plot.canvas.draw_idle()
         else:
             max = 0 
@@ -441,15 +478,16 @@ def open_scan():
                     max = Measure["Pulse"][i]
                 if Measure["Pulse"][i] < min: 
                     min = Measure["Pulse"][i]
-
-            Axis.axis([pos, pos+1000, min-30, max+30])
+            
+            Axis.axis([pos, pos+1000, min-10, max+10])
             Plot.canvas.draw_idle()
 
-    
-    # update function called using on_changed() function
+
     slider_position.on_changed(update)
-    
     plt.show()
+
+
+
 
 root = tk.Tk()
 root.title('Automated Pulse Sensing Tool')
