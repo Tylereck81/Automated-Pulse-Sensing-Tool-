@@ -36,8 +36,7 @@ STOP_SCAN = 0
 is_on = True
 mode = "Manual"
 
-current_pos = [0,0,0]
-old_pos =[0,0,0]
+current_pos = np.array([0,0,0])
 Move =""
 Step = 50
 MAX_X = 250
@@ -58,81 +57,47 @@ global ax, ax2
 global start,end
 
 
-
-#change the current_pos to str '0,0,0'
-def change_to_str(str): 
-    new_str = ""
-    num = "0123456789"
-    for i in range(len(str)): 
-        if str[i] in num: 
-            new_str+=str[i]
-        if str[i] == ",":
-            new_str+=","
-    return new_str
-
-
-def move_Up(): 
-    global Move
-    #global current_pos
-    if current_pos[2]>=0: 
-        current_pos[2]+=Step
-        if current_pos[2]>=MAX_Z:
-            current_pos[2] = MAX_Z
-
+def move_Up():
+    global current_pos
+    if current_pos[2]+Step >=MAX_Z: 
+        current_pos[2] = MAX_Z
     else:
-        current_pos[2] = 0
-    
+        current_pos[2] +=Step
+    write() 
         
 def move_Down():
-    global Move
-   # global current_pos
-    if(current_pos[2]>=0): 
-        current_pos[2]-=Step
-        if current_pos[2] <0: 
-            current_pos[2] = 0
-    else:
+    global current_pos
+    if current_pos[2]-Step <= 0:
         current_pos[2] = 0
-    
+    else: 
+        current_pos[2] -= Step
+    write()
 
 def move_Left():
-    global Move
-    #global current_pos
-    if(current_pos[0]>=0): 
-        current_pos[0]-=Step
-        if current_pos[0] < 0: 
-            current_pos[0] = 0
-    else:
+    global current_pos
+    if current_pos[0]-Step <= 0:
         current_pos[0] = 0
+    else: 
+        current_pos[0] -= Step
+    write()
     
 
 def move_Right():
-    global Move
-   # global current_pos
-    if current_pos[0]>=0: 
-        current_pos[0]+=Step
-        if current_pos[0]>=MAX_X:
-            current_pos[0] = MAX_X
-
+    global current_pos
+    if current_pos[0]+Step >=MAX_X: 
+        current_pos[0] = MAX_X
     else:
-        current_pos[0] = 0
+        current_pos[0] +=Step
+    write()
 
 
-def arduino_move(): 
-    global arduino_port
-    arduino = Serial(port=arduino_port, baudrate= 115200, timeout = .1)
+def write():
+    global current_pos
+    num = str(current_pos[0])+","+str(current_pos[1])+","+str(current_pos[2])
+    num = "("+ num +")"
+    print(num)
+    arduino.write(num.encode())
 
-    while True: 
-        global old_pos
-        global current_pos
-        if old_pos != current_pos:
-            num = change_to_str(str(current_pos))
-            num = "("+ num +")"
-            old_pos = deepcopy(current_pos)
-            print(num)
-            arduino.write(num.encode())
-            time.sleep(0.5)
-            # data = arduino.readline()
-            # print(data)
 
     
 def start_scan(val):
@@ -341,6 +306,8 @@ def connect_sensor():
             Down["state"] = "disabled"
             Left["state"] = "disabled"
             Right["state"] = "disabled"
+        
+        
 
 # def show_figure():
 #     load= Image.open("test1.png")
@@ -532,7 +499,7 @@ def open_scan():
     slider_position.on_changed(update)
     plt.show()
 
-
+arduino = Serial(port=arduino_port, baudrate= 115200, timeout = .1)
 
 
 root = tk.Tk()

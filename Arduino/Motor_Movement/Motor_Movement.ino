@@ -28,7 +28,7 @@ SpeedyStepper z_stepper;
 //Max Millimeter(mm) values that can be applied (300,280,245)
 const int MAX_X_VALUE = 280; 
 const int MAX_Y_VALUE = 280; 
-const int MAX_Z_VALUE = 245; 
+const int MAX_Z_VALUE = 300; 
 
 //MIDDLE FOR SENSOR: 150,140,245 
 
@@ -126,6 +126,8 @@ mm_move_home();
 bool newData = false;
 char t[15]={'\0'};
 int c = 0;
+
+
 void recieve(){ 
   char endMarker =')';
   char begMarker='(';
@@ -143,14 +145,27 @@ void recieve(){
       t[c] = '\0';
       c = 0; 
       newData = true;
-    }
-  }
-}
 
-void showData(){ 
-  if(newData == true){
-    Serial.println(t);
-    newData = false;
+      //splits string when it recieves full string 
+      int c = 0; 
+      int Posi = 0;
+      int i = 0;
+      while(c!=3){ 
+        String temp =""; 
+        while(t[i]!=','){
+          temp+=t[i];
+          i++; 
+         }
+         i++;
+         Position[Posi] = temp.toInt();
+         Posi++;
+         c++;
+      }
+      
+      mm_move_stepper(Position[0],Position[1],Position[2]); 
+      newData = false;
+        
+    }
   }
 }
 
@@ -158,24 +173,6 @@ void showData(){
 void loop() {
   
  recieve(); 
- showData();
- 
-  int c = 0; 
-  int Posi = 0;
-  int i = 0;
-  while(c!=3){ 
-    String temp =""; 
-    while(t[i]!=','){
-      temp+=t[i];
-      i++; 
-     }
-     i++;
-     Position[Posi] = temp.toInt();
-     Posi++;
-     c++;
-  }
 
-
-  mm_move_stepper(Position[0],Position[1],Position[2]); 
   
 }
