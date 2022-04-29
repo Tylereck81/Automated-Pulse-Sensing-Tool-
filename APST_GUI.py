@@ -56,7 +56,7 @@ Measure = {
 
 Pressure_graph = [] 
 Pulse_graph = []
-
+Plot_X =[] 
 global ax, ax2
 
 global start,end
@@ -108,6 +108,7 @@ def write():
 def start_scan(val):
     global Pressure_graph
     global Pulse_graph
+    global Plot_X
     global STOP_SCAN
 
     print('Scan Started')
@@ -117,6 +118,7 @@ def start_scan(val):
     Measure["Pulse"] = []
     Pressure_graph = [] 
     Pulse_graph = []
+    Plot_X = []
 
     #Set stop flag to false
     STOP_SCAN = 0
@@ -132,9 +134,14 @@ def stop_scan(val):
     global plt
     global Pressure_graph
     global Pulse_graph
+    global Plot_X
+    global start,end
+    start = 0 
+    end = len(Measure["X"])
 
     Pressure_graph = [] 
     Pulse_graph = []
+    Plot_X = []
 
     #Set stop flag to true
     global STOP_SCAN
@@ -165,6 +172,7 @@ def sensor_read():
     global STOP_SCAN
     global Pressure_graph
     global Pulse_graph
+    global Plot_X
 
     sensor = Serial(port= 'COM5', 
     baudrate = 256000, 
@@ -181,24 +189,31 @@ def sensor_read():
     #MBH - High byte of pulse wave 
     #CHECK - Low byte of (JYL+JYH+MBL+MBH)
 
-    n =[]
-    X = 0 
+    n =[] 
     Pressure = 0 
     Pulse = 0
     displaynumber  = 1000
+    start_time = time.time()
+
     while True: 
         serialString = sensor.read()
         temp = int.from_bytes(serialString, byteorder=sys.byteorder)
         n.append(temp)
         if len(n) == 9:
-
+            current_time = time.time()
+            plot_time = current_time - start_time
             Pressure = n[5]<<8|n[4]
             Pulse = int(((n[7]<<8)|n[6])/25)
-            Measure["X"].append(X) 
+            Measure["X"].append(plot_time) 
             Measure["Pressure"].append(Pressure)
             Measure["Pulse"].append(Pulse)
 
-            
+            if len(Plot_X) < displaynumber: 
+                Plot_X.append(plot_time) 
+            else: 
+                Plot_X[0:displaynumber-1] = Plot_X[1:displaynumber] 
+                Plot_X[displaynumber-1] = plot_time
+
             if len(Pressure_graph) < displaynumber: 
                 Pressure_graph.append(Pressure) 
             else: 
@@ -210,7 +225,7 @@ def sensor_read():
             else: 
                 Pulse_graph[0:displaynumber-1] = Pulse_graph[1:displaynumber] 
                 Pulse_graph[displaynumber-1] = Pulse
-            X+=1
+            
             n=[]        
         if STOP_SCAN:
             break
@@ -235,7 +250,7 @@ def plot_sensor_data():
         # Pulse = Measure["Pulse"]
 
         
-        x = np.arange(0, len(Pressure_graph))
+        x = deepcopy(Plot_X)
         # Pressure = Pressure_graph 
         # Pulse = Pulse_graph
 
@@ -349,8 +364,6 @@ def scale(i):
 
 def finish_edit_scan(val):
     global start,end
-    print("Start: ", start) 
-    print("End: ", end)
 
     global plt
     plt.close()
@@ -359,6 +372,14 @@ def finish_edit_scan(val):
     ax2 = figure.add_subplot(111) 
     bar1 = FigureCanvasTkAgg(figure, right_frame)
     bar1.get_tk_widget().place(x = 25, y = 20)
+
+    #find the closest value in list to the start and end value 
+    s = min(Measure["X"], key=lambda x:abs(x-start))
+    e = min(Measure["X"], key=lambda x:abs(x-end))
+
+    #find index of that closest value 
+    start = Measure["X"].index(s)
+    end = Measure["X"].index(e)
 
     x = Measure["X"][start:end]
     Pressure = Measure["Pressure"][start:end]
@@ -399,7 +420,7 @@ def open_scan():
         if event.inaxes:
             if y>1:
                 if event.button is MouseButton.LEFT:
-                    start = int(x)
+                    start = float(x)
                     end = 0
                     if removeflag:
                         line2.remove()
@@ -407,18 +428,18 @@ def open_scan():
                         removeflag= 0
 
                     if not doubleclick:
-                        line2 = Axis.axvspan(start, start+1, color='red', alpha=0.5)
+                        line2 = Axis.axvspan(start, start+0.0001, color='red', alpha=0.5)
                         Plot.canvas.draw_idle()
                         doubleclick = 1
                     else: 
                         line2.remove()
                         Plot.canvas.draw_idle()
-                        line2 = Axis.axvspan(start, start+1, color='red', alpha=0.5)
+                        line2 = Axis.axvspan(start, start+0.0001, color='red', alpha=0.5)
                         Plot.canvas.draw_idle()
 
 
                 elif event.button is MouseButton.RIGHT:
-                    end = int(x)
+                    end = float(x)
                     line2.remove()
                     Plot.canvas.draw_idle()
                     doubleclick = 0
@@ -436,7 +457,7 @@ def open_scan():
     axis_position = plt.axes([0.2, 0.1, 0.65, 0.03],
                             facecolor = slider_color)
     slider_position = Slider(axis_position,
-                            'Pos', 1, len(x)-1000)
+                            'Pos', 0, (len(x)-1001)) #last value minus 5 seconds because only 5 seconds can show
     
     
 
@@ -445,7 +466,6 @@ def open_scan():
     def update(val):
         pos = slider_position.val
         index = int(pos)
-        
         if(index+1000<len(Pulse)):
             max = 0 
             min = 1000
@@ -455,7 +475,7 @@ def open_scan():
                 if Measure["Pulse"][i] < min: 
                     min = Measure["Pulse"][i]
         
-            Axis.axis([pos, pos+1000, min-10, max+10])
+            Axis.axis([x[index], x[index+1000], min-10, max+10])
             Plot.canvas.draw_idle()
         else:
             max = 0 
@@ -466,7 +486,7 @@ def open_scan():
                 if Measure["Pulse"][i] < min: 
                     min = Measure["Pulse"][i]
             
-            Axis.axis([pos, pos+1000, min-10, max+10])
+            Axis.axis([x[index], x[index+1000], min-10, max+10])
             Plot.canvas.draw_idle()
 
     axcut1 = plt.axes([0.9, 0.00001, 0.1, 0.1])
