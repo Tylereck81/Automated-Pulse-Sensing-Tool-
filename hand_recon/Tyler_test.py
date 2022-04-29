@@ -3,7 +3,7 @@ import mediapipe as mp
 import time
 from slope import getValue, find_m, getValueWithM
 from math import dist
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture('res/hand_1.mov')
 mpHands = mp.solutions.hands
 hands = mpHands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5)
 mpDraw = mp.solutions.drawing_utils
