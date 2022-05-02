@@ -669,7 +669,7 @@ def show_frames():
             Cam_View.configure(image=imgtk)
            # Repeat after an interval to capture continiously
             Cam_View.after(20, show_frames)
-
+            
     else:
         Cam_View.after(20, show_frames)
 
