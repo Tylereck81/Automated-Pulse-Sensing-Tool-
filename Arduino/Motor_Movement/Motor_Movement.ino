@@ -28,7 +28,7 @@ SpeedyStepper z_stepper;
 //Max Millimeter(mm) values that can be applied (300,280,245)
 const int MAX_X_VALUE = 280; 
 const int MAX_Y_VALUE = 280; 
-const int MAX_Z_VALUE = 300; 
+const int MAX_Z_VALUE = 340; 
 
 //MIDDLE FOR SENSOR: 150,140,245 
 
