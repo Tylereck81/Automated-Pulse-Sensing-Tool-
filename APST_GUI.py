@@ -37,11 +37,17 @@ arduino_port = 'COM3'
 ARDUINO_CONNECT = 0
 SENSOR_CONNECT = 0
 STOP_SCAN = 0
+DETECTION = 0
 
 is_on = True
 mode = "Manual"
 
+#135,140,280
 current_pos = np.array([0,0,0])
+current_pos[0] = 135
+current_pos[1] = 100 
+current_pos[2] = 280
+
 Move =""
 Step = 50
 MAX_X = 250
@@ -508,17 +514,41 @@ preTargetStyle = (0, 0, 255)
 TargetStyle = (0, 255, 0)
 pTime = 0
 cTime = 0
-infinity = 100000 
+infinity = 100000
+N1= 0 
+
+def filled_circle(imgWidth, imgHeight, circle_pos_w, circle_pos_h, circle_radius,img): 
+    n = 0
+    fill = 0
+    for x in range(imgWidth):
+        for y in range(imgHeight):
+            dx = float(x - circle_pos_w)
+            dy = float(y - circle_pos_h)
+            d = (dx*dx) + (dy*dy)
+
+            if (d < (circle_radius*circle_radius)): 
+                n+=1
+                if img[y][x][0] == 255 and img[y][x][1] == 255 and img[y][x][2] == 255:
+                    fill+=1
+
+    print("n: ",n)
+    print("fill: ",fill)
+    if(fill>= n/5): 
+        return True
+    else: 
+        return False
 
 def show_frames():
     global is_on
+    global N1
+    global DETECTION
     
     if is_on: 
         retval, frame = cap.read()
+       
         if retval:
             img = np.split(frame, 2,axis = 1)
             img = img[0]
-
             imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
             result = hands.process(imgRGB)
@@ -530,137 +560,155 @@ def show_frames():
             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)#二值化
             ret, img = cv2.threshold(img, 80, 255, cv2.THRESH_BINARY)
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            if result.multi_hand_landmarks:
-                for handLms in result.multi_hand_landmarks: 
-                    originx = 0 #腕關節
-                    originy = 0
-                    bigFinger4_X = 0 #大拇指點4
-                    bigFinger4_Y = 0
-                    bigFinger3_X = 0 #大拇指點3
-                    bigFinger3_Y = 0
-                    secFinger5_X = 0 #二拇指點5
-                    secFinger5_Y = 0
-                    thirdFinger9_X = 0 #三拇指點9
-                    thirdFinger9_Y = 0
-                    fourthFinger13_X = 0 #四拇指點13
-                    fourthFinger13_Y = 0
-                    fifthFinger17_X = 0 #五拇指點17
-                    fifthFinger17_Y = 0
-                    #xx = 0
-                    #yy = 0
-                    for i, lm in enumerate(handLms.landmark):
-                        xPos = round(lm.x * imgWidth)
-                        yPos = round(lm.y * imgHeight)
-                        if i == 0:
-                            originx = xPos
-                            originy = yPos
-                        #if i == 2:
-                            #xx = xPos
-                            #yy = yPos
-                        if i == 3:
-                            bigFinger3_X = xPos
-                            bigFinger3_Y = yPos
-                            #if (xx-xPos) != 0:
-                                #print("big finger:", getValueWithM(xPos, yPos, -1* (yy-yPos)/(xx-xPos),img))
-                            #else:
-                                #print("big finger:", getValueWithM(xPos, yPos, infinity,img))
-                        if i == 4:
-                            bigFinger4_X = xPos
-                            bigFinger4_Y = yPos
-                        if i == 5:
-                            secFinger5_X = xPos #二拇指點5
-                            secFinger5_Y = yPos
-                        if i == 6:
-                            if (secFinger5_X-xPos) != 0:
-                                total += getValueWithM(xPos, yPos, -1* (secFinger5_Y-yPos)/(secFinger5_X-xPos),img)
-                            else:
-                                total += getValueWithM(xPos, yPos, infinity,img)
-                            print("key: ", i, ", total: ", total)
-                        if i == 9:
-                            thirdFinger9_X = xPos #三拇指點9
-                            thirdFinger9_Y = yPos
-                        if i == 10:
-                            if (thirdFinger9_X-xPos) != 0:
-                                total += getValueWithM(xPos, yPos, -1* (thirdFinger9_Y-yPos)/(thirdFinger9_X-xPos),img)
-                            else:
-                                total += getValueWithM(xPos, yPos, infinity,img)
-                            print("key: ", i, ", total: ", total)
-                        if i == 13:
-                            fourthFinger13_X = xPos #四拇指點13
-                            fourthFinger13_Y = yPos
-                        if i == 14:
-                            if (fourthFinger13_X-xPos) != 0:
-                                total += getValueWithM(xPos, yPos, -1* (fourthFinger13_Y-yPos)/(fourthFinger13_X-xPos),img)
-                            else:
-                                total += getValueWithM(xPos, yPos, infinity,img)
-                            print("key: ", i, ", total: ", total)
-                        if i == 17:
-                            fifthFinger17_X = xPos #五拇指點17
-                            fifthFinger17_Y = yPos
-                        if i == 18:
-                            if (fifthFinger17_X-xPos) != 0:
-                                total += getValueWithM(xPos, yPos, -1* (fifthFinger17_Y-yPos)/(fifthFinger17_X-xPos),img)
-                            else:
-                                total += getValueWithM(xPos, yPos, infinity,img)
-                            print("key: ", i, ", total: ", total)                     
+
+            if DETECTION: 
+                # if result.multi_hand_landmarks:
+                #     for handLms in result.multi_hand_landmarks: 
+                #         originx = 0 #腕關節
+                #         originy = 0
+                #         bigFinger4_X = 0 #大拇指點4
+                #         bigFinger4_Y = 0
+                #         bigFinger3_X = 0 #大拇指點3
+                #         bigFinger3_Y = 0
+                #         secFinger5_X = 0 #二拇指點5
+                #         secFinger5_Y = 0
+                #         thirdFinger9_X = 0 #三拇指點9
+                #         thirdFinger9_Y = 0
+                #         fourthFinger13_X = 0 #四拇指點13
+                #         fourthFinger13_Y = 0
+                #         fifthFinger17_X = 0 #五拇指點17
+                #         fifthFinger17_Y = 0
+                #         #xx = 0
+                #         #yy = 0
+                #         for i, lm in enumerate(handLms.landmark):
+                #             xPos = round(lm.x * imgWidth)
+                #             yPos = round(lm.y * imgHeight)
+                #             if i == 0:
+                #                 originx = xPos
+                #                 originy = yPos
+                #             #if i == 2:
+                #                 #xx = xPos
+                #                 #yy = yPos
+                #             if i == 3:
+                #                 bigFinger3_X = xPos
+                #                 bigFinger3_Y = yPos
+                #                 #if (xx-xPos) != 0:
+                #                     #print("big finger:", getValueWithM(xPos, yPos, -1* (yy-yPos)/(xx-xPos),img))
+                #                 #else:
+                #                     #print("big finger:", getValueWithM(xPos, yPos, infinity,img))
+                #             if i == 4:
+                #                 bigFinger4_X = xPos
+                #                 bigFinger4_Y = yPos
+                #             if i == 5:
+                #                 secFinger5_X = xPos #二拇指點5
+                #                 secFinger5_Y = yPos
+                #             if i == 6:
+                #                 if (secFinger5_X-xPos) != 0:
+                #                     total += getValueWithM(xPos, yPos, -1* (secFinger5_Y-yPos)/(secFinger5_X-xPos),img)
+                #                 else:
+                #                     total += getValueWithM(xPos, yPos, infinity,img)
+                #                 print("key: ", i, ", total: ", total)
+                #             if i == 9:
+                #                 thirdFinger9_X = xPos #三拇指點9
+                #                 thirdFinger9_Y = yPos
+                #             if i == 10:
+                #                 if (thirdFinger9_X-xPos) != 0:
+                #                     total += getValueWithM(xPos, yPos, -1* (thirdFinger9_Y-yPos)/(thirdFinger9_X-xPos),img)
+                #                 else:
+                #                     total += getValueWithM(xPos, yPos, infinity,img)
+                #                 print("key: ", i, ", total: ", total)
+                #             if i == 13:
+                #                 fourthFinger13_X = xPos #四拇指點13
+                #                 fourthFinger13_Y = yPos
+                #             if i == 14:
+                #                 if (fourthFinger13_X-xPos) != 0:
+                #                     total += getValueWithM(xPos, yPos, -1* (fourthFinger13_Y-yPos)/(fourthFinger13_X-xPos),img)
+                #                 else:
+                #                     total += getValueWithM(xPos, yPos, infinity,img)
+                #                 print("key: ", i, ", total: ", total)
+                #             if i == 17:
+                #                 fifthFinger17_X = xPos #五拇指點17
+                #                 fifthFinger17_Y = yPos
+                #             if i == 18:
+                #                 if (fifthFinger17_X-xPos) != 0:
+                #                     total += getValueWithM(xPos, yPos, -1* (fifthFinger17_Y-yPos)/(fifthFinger17_X-xPos),img)
+                #                 else:
+                #                     total += getValueWithM(xPos, yPos, infinity,img)
+                #                 print("key: ", i, ", total: ", total)                     
+                        
                     
-                
-                
-                    if (originx!=0 and originy!=0 and bigFinger4_X!=0 and bigFinger4_Y!=0 
-                    and bigFinger3_X!=0 and bigFinger3_Y!=0 and secFinger5_X!=0 and secFinger5_Y!=0
-                    and thirdFinger9_X!=0 and thirdFinger9_Y!=0 and fourthFinger13_X!=0 and fourthFinger13_Y!=0 
-                    and fifthFinger17_X!=0 and fifthFinger17_Y!=0):
-                        # + round(img.shape[0]/20)
-                        total = total * (20 / 19)
-                        m = find_m(originx, originy+ round(img.shape[0]/6) , img)# 6是參數, 視實際拍攝圖片決定
-                        if m:
-                            cun = total * 1/5
-                            guan = total * 1/2
-                            chi = total * 33/40
-                            cunx = cun / ((m*m+1)**(0.5))
-                            cuny = round(m * cunx)
-                            cunx = round(cunx)
-                            guanx = guan / ((m*m+1)**(0.5))
-                            guany = round(m * guanx)
-                            guanx = round(guanx)
-                            chix = chi / ((m*m+1)**(0.5))
-                            chiy = round(m * chix)
-                            chix = round(chix)
-                            if m < 0:
-                                cunx = originx + cunx
-                                cuny = originy - cuny
-                                guanx = originx + guanx
-                                guany = originy - guany
-                                chix = originx + chix
-                                chiy = originy - chiy
-                            if m > 0:
-                                cunx = originx - cunx
-                                cuny = originy + cuny
-                                guanx = originx - guanx
-                                guany = originy + guany
-                                chix = originx - chix
-                                chiy = originy + chiy
-                            #大拇指4和3的間距
-                            shift = dist((bigFinger4_X, bigFinger4_Y), (bigFinger3_X, bigFinger3_Y))/2
-                            shift_m = -1 / m
-                            shift_x = 0
-                            shift_y = 0
-                            shift_x = round(shift / ((shift_m*shift_m+1)**(0.5)))
-                            shift_y = round(shift_m * shift_x)
-                            #尚未左右移動的點
-                            cv2.circle(img, (cunx, cuny), 5, preTargetStyle, cv2.FILLED)
-                            cv2.circle(img, (guanx, guany), 5, preTargetStyle, cv2.FILLED)
-                            cv2.circle(img, (chix, chiy), 5, preTargetStyle, cv2.FILLED)
-                            # #根據比例左右移動後的點
-                            if bigFinger4_X - originx >= 0:
-                                cv2.circle(img, (cunx + shift_x, cuny - shift_y), 5, preTargetStyle, cv2.FILLED)
-                                cv2.circle(img, (guanx + shift_x, guany - shift_y), 5, preTargetStyle, cv2.FILLED)
-                                cv2.circle(img, (chix + shift_x, chiy - shift_y), 5, preTargetStyle, cv2.FILLED)
-                            else:
-                                cv2.circle(img, (cunx - shift_x, cuny - shift_y), 5, preTargetStyle, cv2.FILLED)
-                                cv2.circle(img, (guanx - shift_x, guany - shift_y), 5, preTargetStyle, cv2.FILLED)
-                                cv2.circle(img, (chix - shift_x, chiy - shift_y), 5, preTargetStyle, cv2.FILLED)
-                            mpDraw.draw_landmarks(img, handLms, mpHands.HAND_CONNECTIONS, handLmsStyle, handConStyle)
+                    
+                #         if (originx!=0 and originy!=0 and bigFinger4_X!=0 and bigFinger4_Y!=0 
+                #         and bigFinger3_X!=0 and bigFinger3_Y!=0 and secFinger5_X!=0 and secFinger5_Y!=0
+                #         and thirdFinger9_X!=0 and thirdFinger9_Y!=0 and fourthFinger13_X!=0 and fourthFinger13_Y!=0 
+                #         and fifthFinger17_X!=0 and fifthFinger17_Y!=0):
+                #             # + round(img.shape[0]/20)
+                #             total = total * (20 / 19)
+                #             m = find_m(originx, originy+ round(img.shape[0]/6) , img)# 6是參數, 視實際拍攝圖片決定
+                #             if m:
+                #                 cun = total * 1/5
+                #                 guan = total * 1/2
+                #                 chi = total * 33/40
+                #                 cunx = cun / ((m*m+1)**(0.5))
+                #                 cuny = round(m * cunx)
+                #                 cunx = round(cunx)
+                #                 guanx = guan / ((m*m+1)**(0.5))
+                #                 guany = round(m * guanx)
+                #                 guanx = round(guanx)
+                #                 chix = chi / ((m*m+1)**(0.5))
+                #                 chiy = round(m * chix)
+                #                 chix = round(chix)
+                #                 if m < 0:
+                #                     cunx = originx + cunx
+                #                     cuny = originy - cuny
+                #                     guanx = originx + guanx
+                #                     guany = originy - guany
+                #                     chix = originx + chix
+                #                     chiy = originy - chiy
+                #                 if m > 0:
+                #                     cunx = originx - cunx
+                #                     cuny = originy + cuny
+                #                     guanx = originx - guanx
+                #                     guany = originy + guany
+                #                     chix = originx - chix
+                #                     chiy = originy + chiy
+                #                 #大拇指4和3的間距
+                #                 shift = dist((bigFinger4_X, bigFinger4_Y), (bigFinger3_X, bigFinger3_Y))/2
+                #                 shift_m = -1 / m
+                #                 shift_x = 0
+                #                 shift_y = 0
+                #                 shift_x = round(shift / ((shift_m*shift_m+1)**(0.5)))
+                #                 shift_y = round(shift_m * shift_x)
+                #                 #尚未左右移動的點
+                #                 cv2.circle(img, (cunx, cuny), 5, (255,0,0), cv2.FILLED)
+                #                 cv2.circle(img, (guanx, guany), 5, (255,0,0), cv2.FILLED)
+                #                 cv2.circle(img, (chix, chiy), 5, (255,0,0), cv2.FILLED)
+                #                 # # #根據比例左右移動後的點
+                #                 # if bigFinger4_X - originx >= 0:
+                #                 #     cv2.circle(img, (cunx + shift_x, cuny - shift_y), 5, (255,0,0), cv2.FILLED)
+                #                 #     cv2.circle(img, (guanx + shift_x, guany - shift_y), 5, (255,0,0), cv2.FILLED)
+                #                 #     cv2.circle(img, (chix + shift_x, chiy - shift_y), 5, (255,0,0), cv2.FILLED)
+                #                 # else:
+                #                 #     cv2.circle(img, (cunx - shift_x, cuny - shift_y), 5, (255,0,0), cv2.FILLED)
+                #                 #     cv2.circle(img, (guanx - shift_x, guany - shift_y), 5, (255,0,0), cv2.FILLED)
+                #                 #     cv2.circle(img, (chix - shift_x, chiy - shift_y), 5, (255,0,0), cv2.FILLED)
+                #                 mpDraw.draw_landmarks(img, handLms, mpHands.HAND_CONNECTIONS, handLmsStyle, handConStyle)
+
+                circle_pos_w = int(imgWidth/2 + 4) 
+                circle_pos_h = int(imgHeight/2 + 7)
+                circle_radius = 10
+                cv2.circle(img, (circle_pos_w,circle_pos_h), circle_radius, (0,0,255), 2)
+                if N1 == 20:
+                    move = filled_circle(imgWidth, imgHeight, circle_pos_w, circle_pos_h, circle_radius, img)
+                    if not move: 
+                        current_pos[0]-=5
+                        write()
+                    else: 
+                        move_sensor()
+                        DETECTION = 0
+                    N1 = 0
+                N1+=1
+
 
             img2 = Image.fromarray(img)
            # Convert image to PhotoImage
@@ -669,10 +717,19 @@ def show_frames():
             Cam_View.configure(image=imgtk)
            # Repeat after an interval to capture continiously
             Cam_View.after(20, show_frames)
-            
+
     else:
         Cam_View.after(20, show_frames)
 
+def move_sensor(): 
+    current_pos[0] += 60
+    current_pos[1] += 25
+    current_pos[2] = 30
+    write()
+    current_pos[2] = 8
+    write()
+    time.sleep(15)
+    auto_scan()
 
 def switch_camera(): 
     global is_on
@@ -681,6 +738,49 @@ def switch_camera():
     else: 
         is_on = True
 
+def select_mode(): 
+    m = MODE.get()
+    global is_on
+    global DETECTION
+    if m == "Manual": #do nothing
+        Up["state"] = "normal"
+        Down["state"] = "normal"
+        Left["state"] = "normal"
+        Right["state"] = "normal" 
+        Scan_B["state"] = "normal"
+        #Go back to original position
+        DETECTION = False
+        current_pos[1] = 100 
+        current_pos[2] = 280
+        current_pos[0] = 135
+        write()
+    else:
+        Up["state"] = "disabled"
+        Down["state"] = "disabled"
+        Left["state"] = "disabled"
+        Right["state"] = "disabled" 
+        Scan_B["state"] = "disabled"
+
+        DETECTION = True
+
+def auto_scan():
+    # tim= threading.Thread(target = timer)
+    # tim.start()
+    start_scan(1)
+    
+        
+
+def timer():
+    global STOP_SCAN
+    start_time = time.time()
+    while True:
+        current_time = time.time()
+        if  current_time - start_time >= 30: 
+            STOP_SCAN = 1 
+            plt.close()
+            break
+
+    
 root = tk.Tk()
 root.title('Automated Pulse Sensing Tool')
 
@@ -716,15 +816,15 @@ switch = ttk.Checkbutton(frame1, text='On/Off', style='Switch',command = switch_
 switch.place(x=120, y=200)
 is_on = False
 
-
 frame2 = ttk.LabelFrame(root, text='Options', width=320, height=320)
 frame2.place(x=20, y=270)
 
 Mode_label = tk.Label(frame2, text='Mode') 
 Mode_label.place(x=40, y = 40)
-Manual = tk.Radiobutton(frame2, text="Manual", variable = mode, indicatoron = False, value = "Manual", width = 10, selectcolor="#007FFF")
+MODE = tk.StringVar()
+Manual = tk.Radiobutton(frame2, text="Manual", variable = MODE, indicatoron = False, value = "Manual", width = 10, selectcolor="#007FFF", command = select_mode)
 Manual.invoke()
-Automatic = tk.Radiobutton(frame2, text="Automatic", variable = mode, indicatoron = False, value = "Automatic", width = 10,  selectcolor="#007FFF")
+Automatic = tk.Radiobutton(frame2, text="Automatic", variable = MODE, indicatoron = False, value = "Automatic", width = 10,  selectcolor="#007FFF", command = select_mode)
 Manual.place(x = 120, y = 40)
 Automatic.place(x = 200, y = 40)
 

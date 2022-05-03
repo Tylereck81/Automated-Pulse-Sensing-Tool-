@@ -120,6 +120,7 @@ void setup() {
 //  mm_move_home(); 
 
 mm_move_home();
+mm_move_stepper(135,100,280);
 
 }
 
