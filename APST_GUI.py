@@ -38,6 +38,13 @@ ARDUINO_CONNECT = 0
 SENSOR_CONNECT = 0
 STOP_SCAN = 0
 DETECTION = 0
+STOP_FRAME = 0
+global clicked_X 
+global clicked_Y
+global CLICKED 
+clicked_X = 0 
+clicked_Y = 0
+CLICKED = 0
 
 is_on = True
 mode = "Manual"
@@ -528,7 +535,7 @@ def filled_circle(imgWidth, imgHeight, circle_pos_w, circle_pos_h, circle_radius
 
             if (d < (circle_radius*circle_radius)): 
                 n+=1
-                if img[y][x][0] == 255 and img[y][x][1] == 255 and img[y][x][2] == 255:
+                if img[y][x][0] == 255 and img[y][x][1] == 0 and img[y][x][2] == 0:
                     fill+=1
 
     print("n: ",n)
@@ -538,10 +545,14 @@ def filled_circle(imgWidth, imgHeight, circle_pos_w, circle_pos_h, circle_radius
     else: 
         return False
 
+
 def show_frames():
     global is_on
     global N1
     global DETECTION
+    global STOP_FRAME
+    global clicked_X
+    global clicked_Y
     
     if is_on: 
         retval, frame = cap.read()
@@ -561,7 +572,7 @@ def show_frames():
             ret, img = cv2.threshold(img, 80, 255, cv2.THRESH_BINARY)
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-            if DETECTION: 
+            # if DETECTION: 
                 # if result.multi_hand_landmarks:
                 #     for handLms in result.multi_hand_landmarks: 
                 #         originx = 0 #腕關節
@@ -681,8 +692,8 @@ def show_frames():
                 #                 shift_y = round(shift_m * shift_x)
                 #                 #尚未左右移動的點
                 #                 cv2.circle(img, (cunx, cuny), 5, (255,0,0), cv2.FILLED)
-                #                 cv2.circle(img, (guanx, guany), 5, (255,0,0), cv2.FILLED)
-                #                 cv2.circle(img, (chix, chiy), 5, (255,0,0), cv2.FILLED)
+                #                 # cv2.circle(img, (guanx, guany), 5, (255,0,0), cv2.FILLED)
+                #                 # cv2.circle(img, (chix, chiy), 5, (255,0,0), cv2.FILLED)
                 #                 # # #根據比例左右移動後的點
                 #                 # if bigFinger4_X - originx >= 0:
                 #                 #     cv2.circle(img, (cunx + shift_x, cuny - shift_y), 5, (255,0,0), cv2.FILLED)
@@ -693,23 +704,35 @@ def show_frames():
                 #                 #     cv2.circle(img, (guanx - shift_x, guany - shift_y), 5, (255,0,0), cv2.FILLED)
                 #                 #     cv2.circle(img, (chix - shift_x, chiy - shift_y), 5, (255,0,0), cv2.FILLED)
                 #                 mpDraw.draw_landmarks(img, handLms, mpHands.HAND_CONNECTIONS, handLmsStyle, handConStyle)
+            circle_pos_w = int(imgWidth/2 + 4) 
+            circle_pos_h = int(imgHeight/2 + 7)
 
-                circle_pos_w = int(imgWidth/2 + 4) 
-                circle_pos_h = int(imgHeight/2 + 7)
-                circle_radius = 10
-                cv2.circle(img, (circle_pos_w,circle_pos_h), circle_radius, (0,0,255), 2)
-                if N1 == 20:
-                    move = filled_circle(imgWidth, imgHeight, circle_pos_w, circle_pos_h, circle_radius, img)
-                    if not move: 
-                        current_pos[0]-=5
-                        write()
-                    else: 
-                        move_sensor()
-                        DETECTION = 0
-                    N1 = 0
-                N1+=1
+            circle_radius = 10
+            cv2.circle(img, (circle_pos_w,circle_pos_h), circle_radius, (0,0,255), 2)
+            # if N1 == 20:
+            #     move = filled_circle(imgWidth, imgHeight, circle_pos_w, circle_pos_h, circle_radius, img)
+            #     if not move: 
+            #         current_pos[0]-=5
+            #         write()
+            #     else: 
+            #         move_sensor()
+            #         DETECTION = 0
+            #     N1 = 0
+            # N1+=1
+            cv2.circle(img, (clicked_X,clicked_Y), 5, (255,0,0), cv2.FILLED)
 
-
+            cv2.imwrite("TESTYLER.png", img)
+            
+            if STOP_FRAME:
+                is_on = False
+                clicked_Y = 0
+                clicked_X = 0
+                waitThread = threading.Thread(target = select_point, args = (img,))
+                waitThread.start()
+                # move_to_distance(circle_pos_w, circle_pos_h, cun_x, cun_y)
+                STOP_FRAME = False
+                
+            
             img2 = Image.fromarray(img)
            # Convert image to PhotoImage
             imgtk = ImageTk.PhotoImage(image = img2)
@@ -721,15 +744,46 @@ def show_frames():
     else:
         Cam_View.after(20, show_frames)
 
-def move_sensor(): 
-    current_pos[0] += 60
-    current_pos[1] += 25
-    current_pos[2] = 30
-    write()
-    current_pos[2] = 8
-    write()
-    time.sleep(15)
-    auto_scan()
+
+def leftclick(event):
+    global clicked_X 
+    global clicked_Y 
+    global CLICKED 
+    clicked_X = event.x +190
+    clicked_Y = event.y +100
+    CLICKED = 1
+    root.unbind('<Button-1>')
+
+def select_point(img):
+    global clicked_X 
+    global clicked_Y
+    global CLICKED 
+    global is_on
+    root.bind("<Button-1>", leftclick)
+    while not CLICKED:
+        if clicked_X!= 0 and clicked_Y!=0:  
+            print('{},{}'.format(clicked_X,clicked_Y))
+            CLICKED = 1
+    CLICKED = 0
+    is_on = True
+    cv2.circle(img, (clicked_X,clicked_Y), 5, (255,0,0), cv2.FILLED)
+    cv2.imwrite("MARKED.png", img)
+    mid_x = int(img.shape[1]/2 + 4) 
+    mid_y = int(img.shape[0]/2 + 7)
+    move_to_distance(mid_x, mid_y, clicked_X, clicked_Y)
+
+    
+
+    
+# def move_sensor(): 
+#     current_pos[0] += 55
+#     current_pos[1] += 25
+#     current_pos[2] = 30
+#     write()
+#     current_pos[2] = 8
+#     write()
+#     time.sleep(15)
+#     auto_scan()
 
 def switch_camera(): 
     global is_on
@@ -742,12 +796,16 @@ def select_mode():
     m = MODE.get()
     global is_on
     global DETECTION
+    global clicked_X
+    global clicked_Y
     if m == "Manual": #do nothing
         Up["state"] = "normal"
         Down["state"] = "normal"
         Left["state"] = "normal"
         Right["state"] = "normal" 
         Scan_B["state"] = "normal"
+        clicked_X = 0
+        clicked_Y = 0
         #Go back to original position
         DETECTION = False
         current_pos[1] = 100 
@@ -779,6 +837,50 @@ def timer():
             STOP_SCAN = 1 
             plt.close()
             break
+
+def stop_frame(): 
+    global STOP_FRAME 
+    STOP_FRAME = 1
+
+def move_to_distance(x1,y1,x2,y2):
+    move_x = abs(x1-x2) 
+    move_y = abs(y1-y2) 
+
+    if x1>x2:
+        if y1<y2: #DOWN
+            current_pos[0] += move_x
+            current_pos[1] += move_y 
+            print("1")
+        else: 
+            current_pos[0] += move_x
+            current_pos[1] -= move_y 
+            print("2")
+    else:
+        if y1<y2:
+             current_pos[0] -= move_x
+             current_pos[1] += move_y
+             print("3")
+        else: 
+            current_pos[0] -= move_x
+            current_pos[1] -= move_y
+            print("4")
+
+    #BOUND CHECKING
+    if current_pos[0] < 0: 
+        current_pos[0] = 0
+    if current_pos[0] > MAX_X: 
+        current_pos[0] = MAX_X
+    if current_pos[1] < 0: 
+        current_pos[1] = 0
+    if current_pos[1] > MAX_Y: 
+        current_pos[1] = MAX_Y
+    
+    print(x1, y1, x2, y2)
+    print(move_x, move_y)
+    
+    write()
+
+
 
     
 root = tk.Tk()
@@ -814,6 +916,9 @@ cap = cv2.VideoCapture(0)
 show_frames()
 switch = ttk.Checkbutton(frame1, text='On/Off', style='Switch',command = switch_camera)
 switch.place(x=120, y=200)
+Stop_Frame = tk.Button(frame1, text = "Stop Frame", command = stop_frame)
+Stop_Frame.place(x = 30, y = 195)
+
 is_on = False
 
 frame2 = ttk.LabelFrame(root, text='Options', width=320, height=320)
