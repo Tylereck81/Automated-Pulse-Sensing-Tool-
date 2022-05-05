@@ -704,11 +704,11 @@ def show_frames():
                 #                 #     cv2.circle(img, (guanx - shift_x, guany - shift_y), 5, (255,0,0), cv2.FILLED)
                 #                 #     cv2.circle(img, (chix - shift_x, chiy - shift_y), 5, (255,0,0), cv2.FILLED)
                 #                 mpDraw.draw_landmarks(img, handLms, mpHands.HAND_CONNECTIONS, handLmsStyle, handConStyle)
-            circle_pos_w = int(imgWidth/2 + 4) 
-            circle_pos_h = int(imgHeight/2 + 7)
+            circle_pos_w = int(imgWidth/2 + 4) + 50
+            circle_pos_h = int(imgHeight/2 + 7) -15
 
             circle_radius = 10
-            cv2.circle(img, (circle_pos_w,circle_pos_h), circle_radius, (0,0,255), 2)
+            cv2.circle(img, (circle_pos_w ,circle_pos_h), circle_radius, (0,0,255), 2)
             # if N1 == 20:
             #     move = filled_circle(imgWidth, imgHeight, circle_pos_w, circle_pos_h, circle_radius, img)
             #     if not move: 
@@ -768,8 +768,8 @@ def select_point(img):
     is_on = True
     cv2.circle(img, (clicked_X,clicked_Y), 5, (255,0,0), cv2.FILLED)
     cv2.imwrite("MARKED.png", img)
-    mid_x = int(img.shape[1]/2 + 4) 
-    mid_y = int(img.shape[0]/2 + 7)
+    mid_x = int(img.shape[1]/2 + 4) + 50
+    mid_y = int(img.shape[0]/2 + 7) -15
     move_to_distance(mid_x, mid_y, clicked_X, clicked_Y)
 
     
@@ -845,6 +845,14 @@ def stop_frame():
 def move_to_distance(x1,y1,x2,y2):
     move_x = abs(x1-x2) 
     move_y = abs(y1-y2) 
+
+    add_x = int(round(float((move_x+20)/10)))
+    move_x+=add_x
+
+    add_y = int(round(float((move_y+20)/10)))
+    move_y+=add_y
+
+
 
     if x1>x2:
         if y1<y2: #DOWN
