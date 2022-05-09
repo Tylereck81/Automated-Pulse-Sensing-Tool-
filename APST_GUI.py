@@ -54,6 +54,10 @@ global DETECT_COUNT
 DETECT_COUNT = 0
 global FINAL_CUNX
 global FINAL_CUNY
+global ANA 
+ANA = 0
+global SCAN_AUTO_START
+SCAN_AUTO_START = 0
 
 is_on = False
 mode = "Manual"
@@ -213,6 +217,8 @@ def sensor_read():
     global Pressure_graph
     global Pulse_graph
     global Plot_X
+    global SCAN_AUTO_START
+    global plt
 
     sensor = Serial(port= 'COM5', 
     baudrate = 256000, 
@@ -265,6 +271,11 @@ def sensor_read():
             else: 
                 Pulse_graph[0:displaynumber-1] = Pulse_graph[1:displaynumber] 
                 Pulse_graph[displaynumber-1] = Pulse
+            
+            if SCAN_AUTO_START:
+                if plot_time >=30: 
+                    STOP_SCAN = 1
+
             
             n=[]        
         if STOP_SCAN:
@@ -565,7 +576,8 @@ def show_frames():
     global FINAL_CUNX
     global FINAL_CUNY
     global DETECT_COUNT
-    
+    global ANA 
+
     if is_on: 
         retval, frame = cap.read()
        
@@ -746,13 +758,18 @@ def show_frames():
                 waitThread2 = threading.Thread(target = detect_countdown)
                 waitThread2.start()
                 AUTO_START = 0
-                
+
             if DETECT_COUNT: #we've stopped the detection and will move to the location 
                 AUTO_START = 0
                 DETECT_COUNT = 0
                 move_to_distance(circle_pos_w, circle_pos_h, FINAL_CUNX, FINAL_CUNY)
-                FINAL_CUNX = 0 
-                FINAL_CUNY = 0 
+
+            if ANA: 
+                auto_scan()
+                ANA = 0
+                
+
+                
 
 
 
@@ -767,6 +784,17 @@ def show_frames():
 
     else:
         Cam_View.after(20, show_frames)
+
+# def wait_for_movement(): 
+#     global Ana
+#     while(ANA == 0):
+#         print("Waiting") 
+#         if ANA == 1:
+#             auto_scan()
+#             print("OUT")
+#             break
+    
+
 
 def detect_countdown():
     global DETECTION
@@ -948,22 +976,23 @@ def count_down():
             break
 
 
-# def auto_scan():
-#     # tim= threading.Thread(target = timer)
-#     # tim.start()
-#     start_scan(1)
-    
+def auto_scan():
+    global SCAN_AUTO_START
+    SCAN_AUTO_START = 1
+    start_scan(1)
+    # tim= threading.Thread(target = timer)
+    # tim.start()
         
 
-def timer():
-    global STOP_SCAN
-    start_time = time.time()
-    while True:
-        current_time = time.time()
-        if  current_time - start_time >= 30: 
-            STOP_SCAN = 1 
-            plt.close()
-            break
+# def timer():
+#     global STOP_SCAN
+#     start_time = time.time()
+#     while True:
+#         current_time = time.time()
+#         if  current_time - start_time >= 30: 
+#             STOP_SCAN = 1 
+#             plt.close()
+#             break
 
 def stop_frame(): 
     global STOP_FRAME 
@@ -972,6 +1001,9 @@ def stop_frame():
     N1 = 0
 
 def move_to_distance(x1,y1,x2,y2):
+    global FINAL_CUNX 
+    global FINAL_CUNY
+    global ANA 
     move_x = abs(x1-x2) 
     move_y = abs(y1-y2) 
 
@@ -981,26 +1013,21 @@ def move_to_distance(x1,y1,x2,y2):
     add_y = int(round(float((move_y+20)/10)))
     move_y+=add_y
 
-
-
-    if x1>x2:
-        if y1<y2: #DOWN
+    #Direction of movement 
+    if x1>x2: 
+        if y1<y2: 
             current_pos[0] += move_x
             current_pos[1] += move_y 
-            print("1")
         else: 
             current_pos[0] += move_x
             current_pos[1] -= move_y 
-            print("2")
     else:
         if y1<y2:
              current_pos[0] -= move_x
              current_pos[1] += move_y
-             print("3")
         else: 
             current_pos[0] -= move_x
             current_pos[1] -= move_y
-            print("4")
 
     #BOUND CHECKING
     if current_pos[0] < 0: 
@@ -1016,9 +1043,90 @@ def move_to_distance(x1,y1,x2,y2):
     print(move_x, move_y)
     
     write()
-    current_pos[2] = 8
-    write()
     print("FINISHED MOVING ")
+    time.sleep(4)
+
+    #WE HAVE PROPER X and Y, now we need Z for automatic mode 
+    if FINAL_CUNX!= 0 and FINAL_CUNY!= 0: 
+        FINAL_CUNX = 0 
+        FINAL_CUNY = 0 
+        movement = threading.Thread(target = auto_movement)
+        movement.start()
+
+
+    
+def auto_movement(): 
+    global ANA 
+    #First move the z to a reasonable position 
+    current_pos[2] = 25
+    write()
+    while True: 
+        check_p = check_pressure_value() 
+        if check_p:
+            ANA = 1
+            print("in here 1")
+            break
+        else:
+            if current_pos[2]-2 < 0: 
+                current_pos[2] = 0 
+            else: 
+                current_pos[2]-=2
+            write()
+
+def check_pressure_value(): 
+    check_pressure = 0
+    x = 0
+
+    global sensor_port
+    global STOP_SCAN
+    global Pressure_graph
+    global Pulse_graph
+    global Plot_X
+
+    sensor = Serial(port= 'COM5', 
+    baudrate = 256000, 
+    parity = serial.PARITY_NONE,
+    bytesize = 8, stopbits=serial.STOPBITS_ONE)
+    sensor.write([0xF0, 0x2F, 0x01, 0x32])
+    # sensor.write([0xF0, 0x2F, 0x01, 0x34]) # Set the pressure value to zero
+
+    #SENSOR DATA- first 4 values stay the same 
+    #[0xF0,0x1F,0x06,0x32,JYL,JYM,MBL,MBH,CHECK] 
+    #JYL - Low byte of pressure 
+    #JYH - High byte of pressure 
+    #MBL - Low byte of pulse wave 
+    #MBH - High byte of pulse wave 
+    #CHECK - Low byte of (JYL+JYH+MBL+MBH)
+
+    n =[] 
+    start_time = time.time()
+    current_time = 0
+
+    while True: 
+        serialString = sensor.read()
+        temp = int.from_bytes(serialString, byteorder=sys.byteorder)
+        n.append(temp)
+        if len(n) == 9:
+            current_time = time.time()
+            # Pressure = n[5]<<8|n[4]
+            Pulse = int(((n[7]<<8)|n[6])/25)
+            check_pressure+= Pulse
+            n=[]
+            x +=1        
+        
+        if current_time - start_time >=2:
+            break
+
+    sensor.write([0xF0, 0x2F, 0x01, 0x33])
+    print('Scan Ended')
+
+    avg = check_pressure/x
+    print(avg)
+    if avg<=90: 
+        return False 
+    else: 
+        return True
+    
 
 def detect(): 
     global DETECTION
