@@ -54,13 +54,13 @@ mode = "Manual"
 current_pos = np.array([0,0,0])
 current_pos[0] = 135
 current_pos[1] = 100 
-current_pos[2] = 280
+current_pos[2] = 272
 
 Move =""
 Step = 50
 MAX_X = 250
 MAX_Y = 250
-MAX_Z = 280
+MAX_Z = 272
 
 Measure = { 
     "X":[], 
@@ -787,11 +787,15 @@ def select_mode():
         Left["state"] = "normal"
         Right["state"] = "normal" 
         Scan_B["state"] = "normal"
+        Base_Up["state"] = "normal"
+        Base_Down["state"] = "normal"
+
+
         clicked_X = 0
         clicked_Y = 0
         #Go back to original position
         current_pos[1] = 100 
-        current_pos[2] = 280
+        current_pos[2] = 272
         current_pos[0] = 135
         write()
     else:
@@ -800,6 +804,88 @@ def select_mode():
         Left["state"] = "disabled"
         Right["state"] = "disabled" 
         Scan_B["state"] = "disabled"
+        Base_Up["state"] = "disabled"
+        Base_Down["state"] = "disabled"
+
+        #Go back to original position
+        current_pos[1] = 100 
+        current_pos[2] = 272
+        current_pos[0] = 135
+        write()
+
+        #User manual pops up
+        top = tk.Toplevel() 
+        x = root.winfo_x()
+        y = root.winfo_y()
+        top.geometry("+%d+%d" %(x+100,y+10))
+        top.title("User Guide") 
+    
+        
+        global page
+        page = 0
+
+        def next():
+           global page
+           if page == 0:
+               Back["state"] = "normal"
+           page+=1
+
+           if page ==6:
+               Next["state"] = "disabled"
+               Finish["state"] = "normal"
+
+           global next_im
+           next_im = ImageTk.PhotoImage(Image.open('./Auto Mode Pictures/'+str(page)+'.png'))
+           main_label.configure(image = next_im)
+           top.update()
+            
+        def back():
+            global page
+            if page == 6: 
+                Next["state"] = "normal"
+                Finish["state"] = "disabled"
+            page-=1
+            if page == 0: 
+                Back["state"] = "disabled"
+
+            global prev_im
+            prev_im = ImageTk.PhotoImage(Image.open('./Auto Mode Pictures/'+str(page)+'.png'))
+            main_label.configure(image = prev_im)
+            top.update()
+        
+        def finish(): 
+            print("FINISHED")
+        
+
+        global beg_ins
+        Start = Image.open('./Auto Mode Pictures/0.png')
+        beg_ins = ImageTk.PhotoImage(Start)
+
+        main_label = tk.Label(top, image = beg_ins)
+        main_label.pack()
+    
+
+        Next = tk.Button(top, text = "Next", height = 2, width = 6 , command= next)
+        Next.pack(side = "right") 
+
+        Back = tk.Button(top, text = "Back", height = 2, width = 6 , command = back)
+        Back.pack(side = "left")
+        if page == 0:
+            Back["state"] = "disabled"
+        
+        Finish = tk.Button(top, text = "Finish",height = 2, width = 6 , command= finish)
+        Finish.pack()
+        if page == 0:
+            Finish["state"] = "disabled"
+
+
+
+
+        
+            
+
+
+        
 
 
 def auto_scan():
@@ -873,7 +959,11 @@ def detect():
     global DETECTION
     global is_on
     if is_on:
-        DETECTION = True 
+        if DETECTION == False:
+            DETECTION = True
+        else: 
+            DETECTION = False
+
 
     
 root = tk.Tk()
