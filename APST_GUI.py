@@ -1,10 +1,12 @@
 from asyncio import base_subprocess
 from email import message
+from json import detect_encoding
 from select import select
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 from re import A
+from tkinter.tix import AUTO
 from turtle import left, right
 from serial import Serial
 import usb.core 
@@ -46,8 +48,14 @@ global CLICKED
 clicked_X = 0 
 clicked_Y = 0
 CLICKED = 0
+global AUTO_START
+AUTO_START = 0
+global DETECT_COUNT 
+DETECT_COUNT = 0
+global FINAL_CUNX
+global FINAL_CUNY
 
-is_on = True
+is_on = False
 mode = "Manual"
 
 #Initial start points so camera can view hand 
@@ -542,6 +550,8 @@ pTime = 0
 cTime = 0
 infinity = 100000
 N1= 0 
+FINAL_CUNX = 0 
+FINAL_CUNY = 0
 
 
 def show_frames():
@@ -551,6 +561,10 @@ def show_frames():
     global STOP_FRAME
     global clicked_X
     global clicked_Y
+    global AUTO_START
+    global FINAL_CUNX
+    global FINAL_CUNY
+    global DETECT_COUNT
     
     if is_on: 
         retval, frame = cap.read()
@@ -656,31 +670,31 @@ def show_frames():
                             m = find_m(originx, originy+ round(img.shape[0]/6) , img)# 6是參數, 視實際拍攝圖片決定
                             if m:
                                 cun = total * 1/5
-                                guan = total * 1/2
-                                chi = total * 33/40
+                                # guan = total * 1/2
+                                # chi = total * 33/40
                                 cunx = cun / ((m*m+1)**(0.5))
                                 cuny = round(m * cunx)
                                 cunx = round(cunx)
-                                guanx = guan / ((m*m+1)**(0.5))
-                                guany = round(m * guanx)
-                                guanx = round(guanx)
-                                chix = chi / ((m*m+1)**(0.5))
-                                chiy = round(m * chix)
-                                chix = round(chix)
+                                # guanx = guan / ((m*m+1)**(0.5))
+                                # guany = round(m * guanx)
+                                # guanx = round(guanx)
+                                # chix = chi / ((m*m+1)**(0.5))
+                                # chiy = round(m * chix)
+                                # chix = round(chix)
                                 if m < 0:
                                     cunx = originx + cunx
                                     cuny = originy - cuny
-                                    guanx = originx + guanx
-                                    guany = originy - guany
-                                    chix = originx + chix
-                                    chiy = originy - chiy
+                                    # guanx = originx + guanx
+                                    # guany = originy - guany
+                                    # chix = originx + chix
+                                    # chiy = originy - chiy
                                 if m > 0:
                                     cunx = originx - cunx
                                     cuny = originy + cuny
-                                    guanx = originx - guanx
-                                    guany = originy + guany
-                                    chix = originx - chix
-                                    chiy = originy + chiy
+                                    # guanx = originx - guanx
+                                    # guany = originy + guany
+                                    # chix = originx - chix
+                                    # chiy = originy + chiy
                                 #大拇指4和3的間距
                                 shift = dist((bigFinger4_X, bigFinger4_Y), (bigFinger3_X, bigFinger3_Y))/2
                                 shift_m = -1 / m
@@ -690,17 +704,20 @@ def show_frames():
                                 shift_y = round(shift_m * shift_x)
                                 #尚未左右移動的點
                                 cv2.circle(img, (cunx, cuny), 5, (255,0,0), cv2.FILLED)
-                                cv2.circle(img, (guanx, guany), 5, (255,0,0), cv2.FILLED)
-                                cv2.circle(img, (chix, chiy), 5, (255,0,0), cv2.FILLED)
+                                # cv2.circle(img, (guanx, guany), 5, (255,0,0), cv2.FILLED)
+                                # cv2.circle(img, (chix, chiy), 5, (255,0,0), cv2.FILLED)
                                 # #根據比例左右移動後的點
                                 if bigFinger4_X - originx >= 0:
                                     cv2.circle(img, (cunx + shift_x, cuny - shift_y), 5, (255,0,0), cv2.FILLED)
-                                    cv2.circle(img, (guanx + shift_x, guany - shift_y), 5, (255,0,0), cv2.FILLED)
-                                    cv2.circle(img, (chix + shift_x, chiy - shift_y), 5, (255,0,0), cv2.FILLED)
+                                    # cv2.circle(img, (guanx + shift_x, guany - shift_y), 5, (255,0,0), cv2.FILLED)
+                                    # cv2.circle(img, (chix + shift_x, chiy - shift_y), 5, (255,0,0), cv2.FILLED)
                                 else:
                                     cv2.circle(img, (cunx - shift_x, cuny - shift_y), 5, (255,0,0), cv2.FILLED)
-                                    cv2.circle(img, (guanx - shift_x, guany - shift_y), 5, (255,0,0), cv2.FILLED)
-                                    cv2.circle(img, (chix - shift_x, chiy - shift_y), 5, (255,0,0), cv2.FILLED)
+                                    # cv2.circle(img, (guanx - shift_x, guany - shift_y), 5, (255,0,0), cv2.FILLED)
+                                    # cv2.circle(img, (chix - shift_x, chiy - shift_y), 5, (255,0,0), cv2.FILLED)
+                                FINAL_CUNX = cunx 
+                                FINAL_CUNY = cuny
+
                                 mpDraw.draw_landmarks(img, handLms, mpHands.HAND_CONNECTIONS, handLmsStyle, handConStyle)
             circle_pos_w = int(imgWidth/2 + 4) + 45
             circle_pos_h = int(imgHeight/2 + 7) - 3
@@ -715,7 +732,7 @@ def show_frames():
                 N1 = 1
 
             
-            if STOP_FRAME:
+            if STOP_FRAME: #if its on manual mode 
                 is_on = False
                 clicked_Y = 0
                 clicked_X = 0
@@ -723,7 +740,22 @@ def show_frames():
                 waitThread.start()
                 # move_to_distance(circle_pos_w, circle_pos_h, cun_x, cun_y)
                 STOP_FRAME = False
+            
+            if AUTO_START: #if its on automatic mode
+                print("DETECTION TIMER START")
+                waitThread2 = threading.Thread(target = detect_countdown)
+                waitThread2.start()
+                AUTO_START = 0
                 
+            if DETECT_COUNT: #we've stopped the detection and will move to the location 
+                AUTO_START = 0
+                DETECT_COUNT = 0
+                move_to_distance(circle_pos_w, circle_pos_h, FINAL_CUNX, FINAL_CUNY)
+                FINAL_CUNX = 0 
+                FINAL_CUNY = 0 
+
+
+
             
             img2 = Image.fromarray(img)
            # Convert image to PhotoImage
@@ -735,6 +767,20 @@ def show_frames():
 
     else:
         Cam_View.after(20, show_frames)
+
+def detect_countdown():
+    global DETECTION
+    global DETECT_COUNT
+    start_time = time.time()
+    while True:
+        current_time = time.time()
+        if  current_time - start_time >= 5:
+            print("DETECTION TIMER END")
+            DETECTION = False
+            DETECT_COUNT = True
+            break
+        
+
 
 
 def leftclick(event):
@@ -781,6 +827,7 @@ def select_mode():
     global DETECTION
     global clicked_X
     global clicked_Y
+    global AUTO_START
     if m == "Manual": #do nothing
         Up["state"] = "normal"
         Down["state"] = "normal"
@@ -789,6 +836,9 @@ def select_mode():
         Scan_B["state"] = "normal"
         Base_Up["state"] = "normal"
         Base_Down["state"] = "normal"
+        Detect_B["state"] = "normal"
+        Stop_Frame["state"] = "normal"
+        AUTO_START = 0
 
 
         clicked_X = 0
@@ -806,6 +856,8 @@ def select_mode():
         Scan_B["state"] = "disabled"
         Base_Up["state"] = "disabled"
         Base_Down["state"] = "disabled"
+        Detect_B["state"] = "disabled"
+        Stop_Frame["state"] = "disabled"
 
         #Go back to original position
         current_pos[1] = 100 
@@ -854,7 +906,10 @@ def select_mode():
             top.update()
         
         def finish(): 
-            print("FINISHED")
+            print("INSTURCTION TIMER START")
+            t2 = threading.Thread(target = count_down)
+            t2.start()
+            top.destroy()
         
 
         global beg_ins
@@ -880,18 +935,23 @@ def select_mode():
 
 
 
+def count_down():
+    global DETECTION 
+    global AUTO_START
+    start_time = time.time()
+    while True:
+        current_time = time.time()
+        if  current_time - start_time >= 5:
+            print("INSTRUCTION TIMER END ")
+            DETECTION = True
+            AUTO_START = True 
+            break
 
-        
-            
 
-
-        
-
-
-def auto_scan():
-    # tim= threading.Thread(target = timer)
-    # tim.start()
-    start_scan(1)
+# def auto_scan():
+#     # tim= threading.Thread(target = timer)
+#     # tim.start()
+#     start_scan(1)
     
         
 
@@ -907,7 +967,9 @@ def timer():
 
 def stop_frame(): 
     global STOP_FRAME 
+    global N1
     STOP_FRAME = 1
+    N1 = 0
 
 def move_to_distance(x1,y1,x2,y2):
     move_x = abs(x1-x2) 
@@ -954,6 +1016,9 @@ def move_to_distance(x1,y1,x2,y2):
     print(move_x, move_y)
     
     write()
+    current_pos[2] = 8
+    write()
+    print("FINISHED MOVING ")
 
 def detect(): 
     global DETECTION
@@ -997,14 +1062,17 @@ Cam_View = tk.Label(frame1, width = 290, height = 175)
 Cam_View.place(x=10, y = 10)
 cap = cv2.VideoCapture(0)
 show_frames()
+
 switch = ttk.Checkbutton(frame1, style='Switch',command = switch_camera)
 switch.place(x=140, y=205)
+switch.invoke()
+
 Stop_Frame = ttk.Button(frame1, text = "Stop", style='Accentbutton', command = stop_frame)
 Stop_Frame.place(x = 10, y = 200)
 Detect_B = ttk.Button(frame1, text = "Detect", style='Accentbutton', command = detect)
 Detect_B.place(x = 220, y = 200)
 
-is_on = False
+
 
 frame2 = ttk.LabelFrame(root, text='Options', width=320, height=320)
 frame2.place(x=20, y=290)
