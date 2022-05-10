@@ -205,11 +205,6 @@ def stop_scan(val):
     ax2.plot(x, Pulse, label ='Pulse')
     ax2.plot(x, Pressure, label ='Pressure')
     bar1.draw()
-    
-    # plt.savefig('test1.png')
-    # show_figure()
-    # plt.close()
-
 
 
 def sensor_read():
@@ -320,9 +315,6 @@ def plot_sensor_data():
 
 
 
-
-
-
 #always check if sensor is connected
 def connect_sensor():
     global SENSOR_CONNECT 
@@ -335,14 +327,6 @@ def connect_sensor():
         ARDUINO_CONNECT = 0
         ports = serial.tools.list_ports.comports()
         for p in ports: 
-            #print(p.vid, p.pid)
-            # VID = str(p.hwid)[12:16]
-            # PID = str(p.hwid)[17:21]
-            # if VID == "10C4" and PID == "EA60": #sensor PID and VID
-            #     SENSOR_CONNECT = 1
-            # if VID == "0403" and PID == "6001": #arduino PID and VID
-            #     ARDUINO_CONNECT = 1
-
             VID = p.vid 
             PID = p.pid 
 
@@ -378,7 +362,7 @@ def connect_sensor():
             Right["state"] = "disabled"
         
         
-
+#Upload scan function 
 def upload_scan():
     global start, end
     if len(nameinfo.get('1.0',tk.END)) == 1 or len(descriptioninfo.get('1.0',tk.END)) == 1:
@@ -405,6 +389,7 @@ def upload_scan():
         descriptioninfo.delete('1.0', tk.END)
         print("Scan uploaded")
 
+#Used to increase/decrease the steps for movement 
 def scale(i):
     global g
     global Step
@@ -412,6 +397,8 @@ def scale(i):
     Step = int(g.get())
     Step_Value.config(text=str(int(scale.get())))
 
+
+#Pressed when user finishes editting scan
 def finish_edit_scan(val):
     global start,end
 
@@ -439,7 +426,7 @@ def finish_edit_scan(val):
     ax2.plot(x, Pressure, label ='Pressure')
     bar1.draw()
 
-
+#Allows user to edit scan
 def open_scan():
     Plot, Axis = plt.subplots()
     plt.subplots_adjust(bottom=0.25)
@@ -545,6 +532,9 @@ def open_scan():
 
     slider_position.on_changed(update)
     plt.show()
+
+
+
 
 mpHands = mp.solutions.hands
 hands = mpHands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5)
@@ -790,8 +780,6 @@ def detect_countdown():
             DETECT_COUNT = True
             break
         
-
-
 
 def leftclick(event):
     global clicked_X 
