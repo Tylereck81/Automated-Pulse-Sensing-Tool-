@@ -546,7 +546,7 @@ TargetStyle = (0, 255, 0)
 pTime = 0
 cTime = 0
 infinity = 100000
-N1= 0 
+N1= 1
 FINAL_CUNX = 0 
 FINAL_CUNY = 0
 
@@ -718,11 +718,10 @@ def show_frames():
                                 FINAL_CUNY = cuny
 
                                 mpDraw.draw_landmarks(img, handLms, mpHands.HAND_CONNECTIONS, handLmsStyle, handConStyle)
+            #Draws the sensor circle 
             circle_pos_w = int(imgWidth/2 + 4) + 45
             circle_pos_h = int(imgHeight/2 + 7) - 3
-
             circle_radius = 10
-            
             cv2.circle(img, (circle_pos_w ,circle_pos_h), circle_radius, (0,0,255), 2)
 
 
@@ -780,6 +779,11 @@ def detect_countdown():
             DETECT_COUNT = True
             break
         
+def stop_frame(): 
+    global STOP_FRAME 
+    global N1
+    STOP_FRAME = 1
+    N1 = 1
 
 def leftclick(event):
     global clicked_X 
@@ -796,16 +800,16 @@ def select_point(img):
     global CLICKED 
     global is_on
     global N1 
-    global DETECTION
+    global DETECTION 
+    DETECTION = 0
     root.bind("<Button-1>", leftclick)
     while not CLICKED:
         if clicked_X!= 0 and clicked_Y!=0:  
             print('{},{}'.format(clicked_X,clicked_Y))
             CLICKED = 1
-            N1 = 0
-            DETECTION = 0
     CLICKED = 0
     is_on = True
+    N1 = 0
     # cv2.circle(img, (clicked_X,clicked_Y), 5, (255,0,0), cv2.FILLED)
     mid_x = int(img.shape[1]/2 + 4) + 45
     mid_y = int(img.shape[0]/2 + 7) - 3
@@ -968,11 +972,6 @@ def auto_scan():
 #             break
         
 
-def stop_frame(): 
-    global STOP_FRAME 
-    global N1
-    STOP_FRAME = 1
-    N1 = 0
 
 def move_to_distance(x1,y1,x2,y2):
     global FINAL_CUNX 
@@ -1014,12 +1013,11 @@ def move_to_distance(x1,y1,x2,y2):
     
     print(x1, y1, x2, y2)
     print(move_x, move_y)
-    
     write()
-    print("FINISHED MOVING ")
 
     #WE HAVE PROPER X and Y, now we need Z for automatic mode 
-    if FINAL_CUNX!= 0 and FINAL_CUNY!= 0: 
+    if MODE.get() == "Automatic":
+        print("FINISHED MOVING ")
         FINAL_CUNX = 0 
         FINAL_CUNY = 0 
         time.sleep(3)
@@ -1089,12 +1087,10 @@ def check_pulse_value():
 
 def detect(): 
     global DETECTION
-    global is_on
-    if is_on:
-        if DETECTION == False:
-            DETECTION = True
-        else: 
-            DETECTION = False
+    if DETECTION == False:
+        DETECTION = True
+    else: 
+        DETECTION = False
 
 
     
