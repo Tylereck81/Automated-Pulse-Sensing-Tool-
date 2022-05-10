@@ -20,6 +20,7 @@ from copy import deepcopy
 from matplotlib.ft2font import HORIZONTAL
 import matplotlib.pyplot as plt
 from matplotlib.backend_bases import MouseButton
+import pyautogui
 import csv 
 import pandas as pd
 from matplotlib.animation import FuncAnimation
@@ -273,38 +274,32 @@ def sensor_read():
                 Pulse_graph[displaynumber-1] = Pulse
             
             if SCAN_AUTO_START:
-                if plot_time >=30: 
-                    STOP_SCAN = 1
+                if plot_time >=30:
+                    #moves motors up so person can move hand
+                    current_pos[2] = 272
+                    write()
+                    SCAN_AUTO_START = 0
+                    break
 
             
             n=[]        
         if STOP_SCAN:
+            #moves motors up so person can move hand
+            current_pos[2] = 272
+            write()
             break
-
-    # while True: 
-    #     serialString = sensor.readline() 
-    #     print(int(serialString))
-    #     if STOP_SCAN: 
-    #         break 
 
     sensor.write([0xF0, 0x2F, 0x01, 0x33])
     print('Scan Ended')
 
-def plot_sensor_data(): 
-
+def plot_sensor_data():
     global plt
     global ax
     ax = plt.subplot(111)
-    def animate(i):
-        # x = Measure["X"]
-        # Pressure = Measure["Pressure"] 
-        # Pulse = Measure["Pulse"]
+    global ani
 
-        
+    def animate(f):
         x = deepcopy(Plot_X)
-        # Pressure = Pressure_graph 
-        # Pulse = Pulse_graph
-
         Pressure = deepcopy(Pressure_graph)
         Pulse = deepcopy(Pulse_graph)
 
@@ -312,7 +307,6 @@ def plot_sensor_data():
         
         ax.plot(x, Pulse, label ='Pulse')
         ax.plot(x, Pressure, label ='Pressure')
-        
 
         ax.legend(loc = "upper left")
 
@@ -321,9 +315,11 @@ def plot_sensor_data():
     bcut1 = b(axcut1, 'Stop')
     bcut1.on_clicked(stop_scan)
 
-    global ani
     ani = FuncAnimation(plt.gcf(),animate, interval=1)
     plt.show()
+
+
+
 
 
 
@@ -577,6 +573,7 @@ def show_frames():
     global FINAL_CUNY
     global DETECT_COUNT
     global ANA 
+    global plt
 
     if is_on: 
         retval, frame = cap.read()
@@ -767,33 +764,18 @@ def show_frames():
             if ANA: 
                 auto_scan()
                 ANA = 0
-                
-
-                
-
-
-
             
+
+            #write frame of camera in Tkinter frame
             img2 = Image.fromarray(img)
-           # Convert image to PhotoImage
             imgtk = ImageTk.PhotoImage(image = img2)
             Cam_View.imgtk = imgtk
             Cam_View.configure(image=imgtk)
-           # Repeat after an interval to capture continiously
             Cam_View.after(20, show_frames)
 
     else:
         Cam_View.after(20, show_frames)
 
-# def wait_for_movement(): 
-#     global Ana
-#     while(ANA == 0):
-#         print("Waiting") 
-#         if ANA == 1:
-#             auto_scan()
-#             print("OUT")
-#             break
-    
 
 
 def detect_countdown():
@@ -856,7 +838,8 @@ def select_mode():
     global clicked_X
     global clicked_Y
     global AUTO_START
-    if m == "Manual": #do nothing
+    global SCAN_AUTO_START
+    if m == "Manual": #enable buttons and set all flags to 0 
         Up["state"] = "normal"
         Down["state"] = "normal"
         Left["state"] = "normal"
@@ -867,6 +850,7 @@ def select_mode():
         Detect_B["state"] = "normal"
         Stop_Frame["state"] = "normal"
         AUTO_START = 0
+        SCAN_AUTO_START = 0
 
 
         clicked_X = 0
@@ -980,19 +964,21 @@ def auto_scan():
     global SCAN_AUTO_START
     SCAN_AUTO_START = 1
     start_scan(1)
-    # tim= threading.Thread(target = timer)
-    # tim.start()
-        
+#     waitThread3 = threading.Thread(target = wait_finish_autoscan) 
+#     waitThread3.start()
 
-# def timer():
-#     global STOP_SCAN
-#     start_time = time.time()
-#     while True:
-#         current_time = time.time()
-#         if  current_time - start_time >= 30: 
-#             STOP_SCAN = 1 
-#             plt.close()
+# def wait_finish_autoscan(): 
+#     global SCAN_AUTO_START
+#     global STOP_SCAN 
+
+#     while SCAN_AUTO_START and STOP_SCAN!=1: 
+#         if SCAN_AUTO_START and STOP_SCAN == 1: 
+#             SCAN_AUTO_START = 0 
+#             print("EXITED FROM THIS AUTOSCAN LOOP BEFORE")
+#             stop_scan(1)
+#             print("EXITED FROM THIS AUTOSCAN LOOP AFTER")
 #             break
+        
 
 def stop_frame(): 
     global STOP_FRAME 
@@ -1003,7 +989,6 @@ def stop_frame():
 def move_to_distance(x1,y1,x2,y2):
     global FINAL_CUNX 
     global FINAL_CUNY
-    global ANA 
     move_x = abs(x1-x2) 
     move_y = abs(y1-y2) 
 
@@ -1044,12 +1029,12 @@ def move_to_distance(x1,y1,x2,y2):
     
     write()
     print("FINISHED MOVING ")
-    time.sleep(4)
 
     #WE HAVE PROPER X and Y, now we need Z for automatic mode 
     if FINAL_CUNX!= 0 and FINAL_CUNY!= 0: 
         FINAL_CUNX = 0 
         FINAL_CUNY = 0 
+        time.sleep(3)
         movement = threading.Thread(target = auto_movement)
         movement.start()
 
@@ -1060,11 +1045,12 @@ def auto_movement():
     #First move the z to a reasonable position 
     current_pos[2] = 25
     write()
+    time.sleep(8)
     while True: 
-        check_p = check_pressure_value() 
+        check_p = check_pulse_value() 
         if check_p:
             ANA = 1
-            print("in here 1")
+            print("ENDS ALL MOVEMENT")
             break
         else:
             if current_pos[2]-2 < 0: 
@@ -1073,30 +1059,16 @@ def auto_movement():
                 current_pos[2]-=2
             write()
 
-def check_pressure_value(): 
-    check_pressure = 0
+def check_pulse_value(): 
+    check_pulse = 0
     x = 0
 
     global sensor_port
-    global STOP_SCAN
-    global Pressure_graph
-    global Pulse_graph
-    global Plot_X
-
     sensor = Serial(port= 'COM5', 
     baudrate = 256000, 
     parity = serial.PARITY_NONE,
     bytesize = 8, stopbits=serial.STOPBITS_ONE)
     sensor.write([0xF0, 0x2F, 0x01, 0x32])
-    # sensor.write([0xF0, 0x2F, 0x01, 0x34]) # Set the pressure value to zero
-
-    #SENSOR DATA- first 4 values stay the same 
-    #[0xF0,0x1F,0x06,0x32,JYL,JYM,MBL,MBH,CHECK] 
-    #JYL - Low byte of pressure 
-    #JYH - High byte of pressure 
-    #MBL - Low byte of pulse wave 
-    #MBH - High byte of pulse wave 
-    #CHECK - Low byte of (JYL+JYH+MBL+MBH)
 
     n =[] 
     start_time = time.time()
@@ -1110,7 +1082,7 @@ def check_pressure_value():
             current_time = time.time()
             # Pressure = n[5]<<8|n[4]
             Pulse = int(((n[7]<<8)|n[6])/25)
-            check_pressure+= Pulse
+            check_pulse+= Pulse
             n=[]
             x +=1        
         
@@ -1118,9 +1090,8 @@ def check_pressure_value():
             break
 
     sensor.write([0xF0, 0x2F, 0x01, 0x33])
-    print('Scan Ended')
 
-    avg = check_pressure/x
+    avg = check_pulse/x
     print(avg)
     if avg<=90: 
         return False 
