@@ -1,67 +1,74 @@
-from asyncio import base_subprocess
-from email import message
-from json import detect_encoding
-from select import select
+#Tyler Eck 
+#410821337 
+#Undergraudate Project - Main GUI 
+#Automated Pulse Sensing Tool 
+
+#################################### Libraries ####################################
+
+#TKINTER 
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
-from re import A
-from tkinter.tix import AUTO
-from turtle import left, right
+import threading
+from copy import deepcopy
+from PIL import Image, ImageTk
+import cv2 
+import numpy as np
+
+#ARDUINO SERIAL 
 from serial import Serial
 import usb.core 
 import usb.util
 import sys
-import time 
 import serial.tools.list_ports 
-import threading
-from matplotlib.widgets import Slider
-from copy import deepcopy
-from matplotlib.ft2font import HORIZONTAL
+
+#LIVE PLOTTING - MATPLOTLIB
 import matplotlib.pyplot as plt
 from matplotlib.backend_bases import MouseButton
-import pyautogui
-import csv 
-import pandas as pd
+from matplotlib.widgets import Slider
 from matplotlib.animation import FuncAnimation
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.widgets import Button as b
-from PIL import Image, ImageTk
-import cv2 
-import numpy as np
+
+
+#HAND RECOGNITION
 import mediapipe as mp
 import time
 from slope import getValue, find_m, getValueWithM
 from math import dist
 
 
+#################################### DECLARATIONS ####################################
 global ani
-arduino_port = 'COM3'
+global clicked_X 
+global clicked_Y
+global CLICKED 
+global AUTO_START
+global DETECT_COUNT 
+global FINAL_CUNX
+global FINAL_CUNY
+global ANA 
+global SCAN_AUTO_START
 ARDUINO_CONNECT = 0
 SENSOR_CONNECT = 0
 STOP_SCAN = 0
 DETECTION = 0
 STOP_FRAME = 0
-global clicked_X 
-global clicked_Y
-global CLICKED 
 clicked_X = 0 
 clicked_Y = 0
 CLICKED = 0
-global AUTO_START
 AUTO_START = 0
-global DETECT_COUNT 
 DETECT_COUNT = 0
-global FINAL_CUNX
-global FINAL_CUNY
-global ANA 
 ANA = 0
-global SCAN_AUTO_START
 SCAN_AUTO_START = 0
-
 is_on = False
 mode = "Manual"
+arduino_port = 'COM3'
+Step = 50
+MAX_X = 250
+MAX_Y = 250
+MAX_Z = 272
 
 #Initial start points so camera can view hand 
 current_pos = np.array([0,0,0])
@@ -69,24 +76,38 @@ current_pos[0] = 135
 current_pos[1] = 100 
 current_pos[2] = 272
 
-Move =""
-Step = 50
-MAX_X = 250
-MAX_Y = 250
-MAX_Z = 272
 
+#Use for the MAIN data 
 Measure = { 
     "X":[], 
     "Pressure":[],
     "Pulse":[]
 }
 
+#Used for temporary live plotting of data
 Pressure_graph = [] 
 Pulse_graph = []
 Plot_X =[] 
 global ax, ax2
 
 global start,end
+
+#Hand and Pulse Point Detection Setup
+mpHands = mp.solutions.hands
+hands = mpHands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5)
+mpDraw = mp.solutions.drawing_utils
+handLmsStyle = mpDraw.DrawingSpec(color=(150, 0, 150), thickness=3)
+handConStyle = mpDraw.DrawingSpec(color=(200, 200, 0), thickness=5)
+preTargetStyle = (0, 0, 255)
+TargetStyle = (0, 255, 0)
+pTime = 0
+cTime = 0
+infinity = 100000
+N1= 1
+FINAL_CUNX = 0 
+FINAL_CUNY = 0
+
+#################################### FUNCTIONS ####################################
 
 #Movement for the Sensor
 def move_Up():
@@ -296,7 +317,7 @@ def sensor_read():
     print('Scan Ended')
 
 
-
+#live animation of plotting sensor data as its being read
 def plot_sensor_data():
     global plt
     global ax
@@ -324,7 +345,7 @@ def plot_sensor_data():
 
 
 
-#always check if sensor is connected
+#always check if sensors and arduino are connected
 def connect_sensor():
     global SENSOR_CONNECT 
     global ARDUINO_CONNECT 
@@ -397,6 +418,7 @@ def upload_scan():
         nameinfo.delete('1.0', tk.END)
         descriptioninfo.delete('1.0', tk.END)
         print("Scan uploaded")
+
 
 #Used to increase/decrease the steps for movement 
 def scale(i):
@@ -496,16 +518,11 @@ def open_scan():
                     removeflag = 1
 
     plt.connect('button_press_event', onclick)
-    
-
-    
     slider_color = 'White'
     axis_position = plt.axes([0.2, 0.1, 0.65, 0.03],
                             facecolor = slider_color)
     slider_position = Slider(axis_position,
                             'Pos', 0, (len(x)-1001)) #last value minus 5 seconds because only 5 seconds can show
-    
-    
 
     # update() function to change the graph when the
     # slider is in use
@@ -535,6 +552,7 @@ def open_scan():
             Axis.axis([x[index], x[index+1000], min-10, max+10])
             Plot.canvas.draw_idle()
 
+    #Finished Button for finish editting
     axcut1 = plt.axes([0.9, 0.00001, 0.1, 0.1])
     bcut1 = b(axcut1, 'Finish')
     bcut1.on_clicked(finish_edit_scan)
@@ -542,24 +560,7 @@ def open_scan():
     slider_position.on_changed(update)
     plt.show()
 
-
-
-
-mpHands = mp.solutions.hands
-hands = mpHands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5)
-mpDraw = mp.solutions.drawing_utils
-handLmsStyle = mpDraw.DrawingSpec(color=(150, 0, 150), thickness=3)
-handConStyle = mpDraw.DrawingSpec(color=(200, 200, 0), thickness=5)
-preTargetStyle = (0, 0, 255)
-TargetStyle = (0, 255, 0)
-pTime = 0
-cTime = 0
-infinity = 100000
-N1= 1
-FINAL_CUNX = 0 
-FINAL_CUNY = 0
-
-
+#main camera function used to show live camera feed
 def show_frames():
     global is_on
     global N1
@@ -579,7 +580,7 @@ def show_frames():
        
         if retval:
             img = np.split(frame, 2,axis = 1)
-            img = img[0]
+            img = img[0] #Left Camera 
             imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
             result = hands.process(imgRGB)
@@ -588,50 +589,44 @@ def show_frames():
             imgWidth = img.shape[1]
             total = 0.0
 
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)#二值化
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             ret, img = cv2.threshold(img, 80, 255, cv2.THRESH_BINARY)
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
             if DETECTION: 
                 if result.multi_hand_landmarks:
                     for handLms in result.multi_hand_landmarks: 
-                        originx = 0 #腕關節
+
+                        #Gets the 11 handlandmarks used to calculate the pulse point
+                        originx = 0 
                         originy = 0
-                        bigFinger4_X = 0 #大拇指點4
+                        bigFinger4_X = 0 
                         bigFinger4_Y = 0
-                        bigFinger3_X = 0 #大拇指點3
+                        bigFinger3_X = 0 
                         bigFinger3_Y = 0
-                        secFinger5_X = 0 #二拇指點5
+                        secFinger5_X = 0 
                         secFinger5_Y = 0
-                        thirdFinger9_X = 0 #三拇指點9
+                        thirdFinger9_X = 0 
                         thirdFinger9_Y = 0
-                        fourthFinger13_X = 0 #四拇指點13
+                        fourthFinger13_X = 0 
                         fourthFinger13_Y = 0
-                        fifthFinger17_X = 0 #五拇指點17
+                        fifthFinger17_X = 0 
                         fifthFinger17_Y = 0
-                        #xx = 0
-                        #yy = 0
+
                         for i, lm in enumerate(handLms.landmark):
                             xPos = round(lm.x * imgWidth)
                             yPos = round(lm.y * imgHeight)
                             if i == 0:
                                 originx = xPos
                                 originy = yPos
-                            #if i == 2:
-                                #xx = xPos
-                                #yy = yPos
                             if i == 3:
                                 bigFinger3_X = xPos
                                 bigFinger3_Y = yPos
-                                #if (xx-xPos) != 0:
-                                    #print("big finger:", getValueWithM(xPos, yPos, -1* (yy-yPos)/(xx-xPos),img))
-                                #else:
-                                    #print("big finger:", getValueWithM(xPos, yPos, infinity,img))
                             if i == 4:
                                 bigFinger4_X = xPos
                                 bigFinger4_Y = yPos
                             if i == 5:
-                                secFinger5_X = xPos #二拇指點5
+                                secFinger5_X = xPos
                                 secFinger5_Y = yPos
                             if i == 6:
                                 if (secFinger5_X-xPos) != 0:
@@ -640,7 +635,7 @@ def show_frames():
                                     total += getValueWithM(xPos, yPos, infinity,img)
                                 print("key: ", i, ", total: ", total)
                             if i == 9:
-                                thirdFinger9_X = xPos #三拇指點9
+                                thirdFinger9_X = xPos 
                                 thirdFinger9_Y = yPos
                             if i == 10:
                                 if (thirdFinger9_X-xPos) != 0:
@@ -649,7 +644,7 @@ def show_frames():
                                     total += getValueWithM(xPos, yPos, infinity,img)
                                 print("key: ", i, ", total: ", total)
                             if i == 13:
-                                fourthFinger13_X = xPos #四拇指點13
+                                fourthFinger13_X = xPos 
                                 fourthFinger13_Y = yPos
                             if i == 14:
                                 if (fourthFinger13_X-xPos) != 0:
@@ -658,7 +653,7 @@ def show_frames():
                                     total += getValueWithM(xPos, yPos, infinity,img)
                                 print("key: ", i, ", total: ", total)
                             if i == 17:
-                                fifthFinger17_X = xPos #五拇指點17
+                                fifthFinger17_X = xPos 
                                 fifthFinger17_Y = yPos
                             if i == 18:
                                 if (fifthFinger17_X-xPos) != 0:
@@ -668,14 +663,13 @@ def show_frames():
                                 print("key: ", i, ", total: ", total)                     
                         
                     
-                    
                         if (originx!=0 and originy!=0 and bigFinger4_X!=0 and bigFinger4_Y!=0 
                         and bigFinger3_X!=0 and bigFinger3_Y!=0 and secFinger5_X!=0 and secFinger5_Y!=0
                         and thirdFinger9_X!=0 and thirdFinger9_Y!=0 and fourthFinger13_X!=0 and fourthFinger13_Y!=0 
                         and fifthFinger17_X!=0 and fifthFinger17_Y!=0):
                             # + round(img.shape[0]/20)
                             total = total * (20 / 19)
-                            m = find_m(originx, originy+ round(img.shape[0]/6) , img)# 6是參數, 視實際拍攝圖片決定
+                            m = find_m(originx, originy+ round(img.shape[0]/6) , img)
                             if m:
                                 cun = total * 1/5
                                 # guan = total * 1/2
@@ -703,18 +697,15 @@ def show_frames():
                                     # guany = originy + guany
                                     # chix = originx - chix
                                     # chiy = originy + chiy
-                                #大拇指4和3的間距
                                 shift = dist((bigFinger4_X, bigFinger4_Y), (bigFinger3_X, bigFinger3_Y))/2
                                 shift_m = -1 / m
                                 shift_x = 0
                                 shift_y = 0
                                 shift_x = round(shift / ((shift_m*shift_m+1)**(0.5)))
                                 shift_y = round(shift_m * shift_x)
-                                #尚未左右移動的點
                                 cv2.circle(img, (cunx, cuny), 5, (255,0,0), cv2.FILLED)
                                 # cv2.circle(img, (guanx, guany), 5, (255,0,0), cv2.FILLED)
                                 # cv2.circle(img, (chix, chiy), 5, (255,0,0), cv2.FILLED)
-                                # #根據比例左右移動後的點
                                 if bigFinger4_X - originx >= 0:
                                     cv2.circle(img, (cunx + shift_x, cuny - shift_y), 5, (255,0,0), cv2.FILLED)
                                     # cv2.circle(img, (guanx + shift_x, guany - shift_y), 5, (255,0,0), cv2.FILLED)
@@ -733,12 +724,11 @@ def show_frames():
             circle_radius = 10
             cv2.circle(img, (circle_pos_w ,circle_pos_h), circle_radius, (0,0,255), 2)
 
-
+            #displays clicked point one time
             if N1 == 0:
                 cv2.circle(img, (clicked_X,clicked_Y), 5, (255,0,0), cv2.FILLED)
                 N1 = 1
 
-            
             if STOP_FRAME: #if its on manual mode 
                 is_on = False
                 clicked_Y = 0
@@ -774,20 +764,24 @@ def show_frames():
     else:
         Cam_View.after(20, show_frames)
 
+#Used to switch camera on and off 
+def switch_camera(): 
+    global is_on
+    if is_on: 
+        is_on = False
+    else: 
+        is_on = True
 
-
-def detect_countdown():
+#Used to switch detection on and off
+def detect(): 
     global DETECTION
-    global DETECT_COUNT
-    start_time = time.time()
-    while True:
-        current_time = time.time()
-        if  current_time - start_time >= 5:
-            print("DETECTION TIMER END")
-            DETECTION = False
-            DETECT_COUNT = True
-            break
-        
+    if DETECTION == False:
+        DETECTION = True
+    else: 
+        DETECTION = False
+
+
+######################  MANUAL MODE: User stops frame and selects point  ######################
 def stop_frame(): 
     global STOP_FRAME 
     global N1
@@ -819,19 +813,161 @@ def select_point(img):
     CLICKED = 0
     is_on = True
     N1 = 0
-    # cv2.circle(img, (clicked_X,clicked_Y), 5, (255,0,0), cv2.FILLED)
     mid_x = int(img.shape[1]/2 + 4) + 45
     mid_y = int(img.shape[0]/2 + 7) - 3
     move_to_distance(mid_x, mid_y, clicked_X, clicked_Y)
     
 
-def switch_camera(): 
-    global is_on
-    if is_on: 
-        is_on = False
-    else: 
-        is_on = True
+######################  AUTOMATIC MODE: User waits for detection, movement, and scanning  ######################
 
+#countdown after instructions 
+def count_down():
+    global DETECTION 
+    global AUTO_START
+    start_time = time.time()
+    while True:
+        current_time = time.time()
+        if  current_time - start_time >= 5:
+            print("INSTRUCTION TIMER END ")
+            DETECTION = True
+            AUTO_START = True 
+            break
+
+#countdown for detection
+def detect_countdown():
+    global DETECTION
+    global DETECT_COUNT
+    start_time = time.time()
+    while True:
+        current_time = time.time()
+        if  current_time - start_time >= 5:
+            print("DETECTION TIMER END")
+            DETECTION = False
+            DETECT_COUNT = True
+            break
+
+#moves motors from (x1,y1) to (x2,y2) for both Automatic and Manual
+def move_to_distance(x1,y1,x2,y2):
+    global FINAL_CUNX 
+    global FINAL_CUNY
+    move_x = abs(x1-x2) 
+    move_y = abs(y1-y2) 
+
+    add_x = int(round(float((move_x+20)/10)))
+    move_x+=add_x
+
+    add_y = int(round(float((move_y+20)/10)))
+    move_y+=add_y
+
+    #Direction of movement 
+    if x1>x2: 
+        if y1<y2: 
+            current_pos[0] += move_x
+            current_pos[1] += move_y 
+        else: 
+            current_pos[0] += move_x
+            current_pos[1] -= move_y 
+    else:
+        if y1<y2:
+             current_pos[0] -= move_x
+             current_pos[1] += move_y
+        else: 
+            current_pos[0] -= move_x
+            current_pos[1] -= move_y
+
+    #BOUND CHECKING
+    if current_pos[0] < 0: 
+        current_pos[0] = 0
+    if current_pos[0] > MAX_X: 
+        current_pos[0] = MAX_X
+    if current_pos[1] < 0: 
+        current_pos[1] = 0
+    if current_pos[1] > MAX_Y: 
+        current_pos[1] = MAX_Y
+    
+    print(x1, y1, x2, y2)
+    print(move_x, move_y)
+    write()
+
+    #WE HAVE PROPER X and Y, now we need Z for automatic mode 
+    if MODE.get() == "Automatic":
+        print("FINISHED MOVING ")
+        FINAL_CUNX = 0 
+        FINAL_CUNY = 0 
+        time.sleep(3)
+        movement = threading.Thread(target = auto_movement)
+        movement.start()
+
+
+#used to move to appropriate Z - avoid too much pressure 
+def auto_movement(): 
+    global ANA 
+    #First move the z to a reasonable position 
+    current_pos[2] = 25
+    write()
+    time.sleep(8)
+    while True: 
+        check_p = check_pulse_value() 
+        if check_p:
+            ANA = 1
+            print("ENDS ALL MOVEMENT")
+            break
+        else:
+            if current_pos[2]-2 < 0: 
+                current_pos[2] = 0 
+            else: 
+                current_pos[2]-=2
+            write()
+
+
+#takes temporary sensor data to determine if right Z value is reached
+def check_pulse_value(): 
+    check_pulse = 0
+    x = 0
+
+    global sensor_port
+    sensor = Serial(port= 'COM5', 
+    baudrate = 256000, 
+    parity = serial.PARITY_NONE,
+    bytesize = 8, stopbits=serial.STOPBITS_ONE)
+    sensor.write([0xF0, 0x2F, 0x01, 0x32])
+
+    n =[] 
+    start_time = time.time()
+    current_time = 0
+
+    while True: 
+        serialString = sensor.read()
+        temp = int.from_bytes(serialString, byteorder=sys.byteorder)
+        n.append(temp)
+        if len(n) == 9:
+            current_time = time.time()
+            # Pressure = n[5]<<8|n[4]
+            Pulse = int(((n[7]<<8)|n[6])/25)
+            check_pulse+= Pulse
+            n=[]
+            x +=1        
+        
+        if current_time - start_time >=2:
+            break
+
+    sensor.write([0xF0, 0x2F, 0x01, 0x33])
+
+    avg = check_pulse/x
+    print(avg)
+    if avg<=90: 
+        return False 
+    else: 
+        return True
+
+#starts autoscan when right Z place is reached
+def auto_scan():
+    global SCAN_AUTO_START
+    SCAN_AUTO_START = 1
+    start_scan(1)
+
+
+#Selection between Automatic or Manual
 def select_mode(): 
     m = MODE.get()
     global is_on
@@ -949,184 +1085,30 @@ def select_mode():
             Finish["state"] = "disabled"
 
 
-
-def count_down():
-    global DETECTION 
-    global AUTO_START
-    start_time = time.time()
-    while True:
-        current_time = time.time()
-        if  current_time - start_time >= 5:
-            print("INSTRUCTION TIMER END ")
-            DETECTION = True
-            AUTO_START = True 
-            break
-
-
-def auto_scan():
-    global SCAN_AUTO_START
-    SCAN_AUTO_START = 1
-    start_scan(1)
-#     waitThread3 = threading.Thread(target = wait_finish_autoscan) 
-#     waitThread3.start()
-
-# def wait_finish_autoscan(): 
-#     global SCAN_AUTO_START
-#     global STOP_SCAN 
-
-#     while SCAN_AUTO_START and STOP_SCAN!=1: 
-#         if SCAN_AUTO_START and STOP_SCAN == 1: 
-#             SCAN_AUTO_START = 0 
-#             print("EXITED FROM THIS AUTOSCAN LOOP BEFORE")
-#             stop_scan(1)
-#             print("EXITED FROM THIS AUTOSCAN LOOP AFTER")
-#             break
-        
-
-
-def move_to_distance(x1,y1,x2,y2):
-    global FINAL_CUNX 
-    global FINAL_CUNY
-    move_x = abs(x1-x2) 
-    move_y = abs(y1-y2) 
-
-    add_x = int(round(float((move_x+20)/10)))
-    move_x+=add_x
-
-    add_y = int(round(float((move_y+20)/10)))
-    move_y+=add_y
-
-    #Direction of movement 
-    if x1>x2: 
-        if y1<y2: 
-            current_pos[0] += move_x
-            current_pos[1] += move_y 
-        else: 
-            current_pos[0] += move_x
-            current_pos[1] -= move_y 
-    else:
-        if y1<y2:
-             current_pos[0] -= move_x
-             current_pos[1] += move_y
-        else: 
-            current_pos[0] -= move_x
-            current_pos[1] -= move_y
-
-    #BOUND CHECKING
-    if current_pos[0] < 0: 
-        current_pos[0] = 0
-    if current_pos[0] > MAX_X: 
-        current_pos[0] = MAX_X
-    if current_pos[1] < 0: 
-        current_pos[1] = 0
-    if current_pos[1] > MAX_Y: 
-        current_pos[1] = MAX_Y
-    
-    print(x1, y1, x2, y2)
-    print(move_x, move_y)
-    write()
-
-    #WE HAVE PROPER X and Y, now we need Z for automatic mode 
-    if MODE.get() == "Automatic":
-        print("FINISHED MOVING ")
-        FINAL_CUNX = 0 
-        FINAL_CUNY = 0 
-        time.sleep(3)
-        movement = threading.Thread(target = auto_movement)
-        movement.start()
-
-
-    
-def auto_movement(): 
-    global ANA 
-    #First move the z to a reasonable position 
-    current_pos[2] = 25
-    write()
-    time.sleep(8)
-    while True: 
-        check_p = check_pulse_value() 
-        if check_p:
-            ANA = 1
-            print("ENDS ALL MOVEMENT")
-            break
-        else:
-            if current_pos[2]-2 < 0: 
-                current_pos[2] = 0 
-            else: 
-                current_pos[2]-=2
-            write()
-
-def check_pulse_value(): 
-    check_pulse = 0
-    x = 0
-
-    global sensor_port
-    sensor = Serial(port= 'COM5', 
-    baudrate = 256000, 
-    parity = serial.PARITY_NONE,
-    bytesize = 8, stopbits=serial.STOPBITS_ONE)
-    sensor.write([0xF0, 0x2F, 0x01, 0x32])
-
-    n =[] 
-    start_time = time.time()
-    current_time = 0
-
-    while True: 
-        serialString = sensor.read()
-        temp = int.from_bytes(serialString, byteorder=sys.byteorder)
-        n.append(temp)
-        if len(n) == 9:
-            current_time = time.time()
-            # Pressure = n[5]<<8|n[4]
-            Pulse = int(((n[7]<<8)|n[6])/25)
-            check_pulse+= Pulse
-            n=[]
-            x +=1        
-        
-        if current_time - start_time >=2:
-            break
-
-    sensor.write([0xF0, 0x2F, 0x01, 0x33])
-
-    avg = check_pulse/x
-    print(avg)
-    if avg<=90: 
-        return False 
-    else: 
-        return True
-    
-
-def detect(): 
-    global DETECTION
-    if DETECTION == False:
-        DETECTION = True
-    else: 
-        DETECTION = False
-
-
-    
+#################################### MAIN TKINTER WINDOW DECLARATIONS ####################################
 root = tk.Tk()
 root.title('Automated Pulse Sensing Tool')
 
 window_height = 700
 window_width = 1000
 
+#Used for step selection
 g = tk.IntVar()
 g.set(50)
 Step = int(g.get())
 
+#Window and Design Setup 
 screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
-
 x_cordinate = int((screen_width/2) - (window_width/2))
 y_cordinate = int((screen_height/2) - (window_height/2))
-
 root.geometry("{}x{}+{}+{}".format(window_width, window_height, x_cordinate, y_cordinate))
-
 style = ttk.Style(root)
 root.tk.call('source', 'GUI_Design/azure dark.tcl')
 style.theme_use('azure')
 
+
+#############  Live Camera Feed Area #############
 
 frame1 = ttk.LabelFrame(root, text="Camera", width=320, height=255)
 frame1.place(x=20, y=12)
@@ -1148,6 +1130,8 @@ Detect_B.place(x = 220, y = 200)
 
 
 
+
+#############  Options/Configuration Area #############
 frame2 = ttk.LabelFrame(root, text='Options', width=320, height=320)
 frame2.place(x=20, y=290)
 
@@ -1171,8 +1155,6 @@ Sensor_Move_Label = tk.Label(frame2, text="Sensor")
 Base_Up = tk.Button(frame2, text = "ʌ", command = move_base_Up) 
 Base_Down = tk.Button(frame2, text = "v", command = move_base_Down)
 Base_Move_Label = tk.Label(frame2, text="Base")
-
-
 ix = -20
 iy = 20
 Up.place(x = 170+ix, y = 60+iy)
@@ -1187,7 +1169,6 @@ Base_Move_Label.place(x = 170+ix+83-4, y = 90+iy+2)
 
 global arduino 
 
-
 Step_Label = tk.Label(frame2, text = "Steps")
 Step_Label.place(x= 50, y = 180)
 
@@ -1196,8 +1177,6 @@ scale.place(x=150, y=183)
 
 Step_Value  = tk.Label(frame2, text= str(int(g.get())))
 Step_Value.place(x = 250, y = 180)
-
-
 
 Sensor_Connect_Label = tk.Label(frame2, text = "Pulse Sensor: ")
 Arduino_Connect_Label = tk.Label(frame2, text = "Motors: ")
@@ -1212,38 +1191,26 @@ Scan_B = ttk.Button(frame2, text='Scan', style='Accentbutton', command = lambda:
 Scan_B.place(x=185, y=235)
 
 
-
-
-
-
-
+#############  Graph Display Area #############
 right_frame = tk.Frame(root, width = 650, height = 700, bg = "grey")
 right_frame.place(x = 350, y = 0)
-
-# figure_frame = tk.Frame(right_frame, height = 500, width = 600)
-# figure_frame.place(x = 25, y =20)
-# figure_frame.bind("<Button-1>", open_scan)
-
-# load = Image.open("test1.png")
-# render = ImageTk.PhotoImage(load)
-# img =tk.Label(right_frame, image = render)
-# img.place(x = 4, y = 5)
 
 figure = plt.Figure(figsize = (6,5), dpi = 100)
 ax2 = figure.add_subplot(111) 
 bar1 = FigureCanvasTkAgg(figure, right_frame)
 bar1.get_tk_widget().place(x = 25, y = 20)
-
 x = Measure["X"]
 Pressure = Measure["Pressure"] 
 Pulse = Measure["Pulse"]
-
 ax2.plot(x, Pulse, label ='Pulse')
 ax2.plot(x, Pressure, label ='Pressure')
+
 
 OpenGraph = ttk.Button(right_frame, text = "Open Graph", style="Accentbutton",command = open_scan)
 OpenGraph.place(x = 500, y = 530)
 
+
+#############  Information Input Area #############
 
 Scan_Label = tk.Label(right_frame, text = "Scan Information",fg = "black", bg = "grey", font = ("Arial", 15) )
 Scan_Label.place(x = 25, y = 530)
@@ -1265,10 +1232,10 @@ Upload.place(x = 30, y = 660)
 
 
 
-
-def main(): 
-    # t1 = Thread(target = arduino_move, daemon=True)
-    # t1.start()
+#################################### MAIN ####################################
+def main():
+    
+    #Always running to check if sensors and arduinos are connected
     t2 = threading.Thread(target = connect_sensor, daemon = True)
     t2.start() 
 
