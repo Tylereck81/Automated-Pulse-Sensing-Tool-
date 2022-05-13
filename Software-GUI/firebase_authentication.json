@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "automated-pulse-sensing-tool",
+  "private_key_id": "b43f4d8a24c7b3ba914f725815e83087a3613c36",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDQgJuBdt0sbUrN\nUUKKR/OLJKweKtZMK4zF7oeqHz+SltW82R6eYJVGCixM5l9w6fiRc2d5P36Pw1ad\nXICJdcR5deLh9GVp0mbtpBavKhRBVdCpUwLmvQW72fU2NAZOrzZLpJaEDnm3d81v\nzIroXC+wj0XEYaWI/dRN0FPIEh9QWbJ6kotii1LHv5T0hVcSljHJKvISqeaBS6V3\ni1eq41iMG9SHKrYlJMYJ8Ki3HLmJ+xkiAtE5UzLN/JRbkhToHAb578C9MrHLS7ZB\nFFOeO1lZJIh0T3MKDJNFI1Bl18Y8Lrl8LS1bp5JZ/Bm5sNggXTmWJTxzk5aJR0FY\nf/7GPpItAgMBAAECggEAL9hPNuRuiO8UcuxyczZjE9sotux4C/cTYOklTvvINAxy\nRBljng7GOlIDy+qyXIAIJuJfTHKuSXGW+tm68jAo04FifJy/N8sNDPuyK+RhTQPS\n88QFfqrB+dMgYp2KE/y/XhjI5ElJE3mFliHO/1aGKAMcjJ2mpXqvwOJtE1RbRK3C\njFDXxw8G6BAZ2lU+lIiWa9xfcS3k/KxPiEc0iIp45jQtU19Btu6n0vVdAo8RsMyy\nzPdVYQeJrxPwvmwGWn1cqr4Q6ctOw3Bt5dzm0TqoI3bMbmUrmC2FDexirCPZV3ql\ne+knMXjemGwxb8kLssxGMxo7AKWukw5sedadM01QwQKBgQDqnpXai562W5BDTezo\nZFXLf7gb0X8Th3xbkBc0Syd4ym9rMGJE9BJKOvkz36Au1Pknl4XXKWEpHHF81S8F\nwWiKkmkoVMFMPynlyQzW0xbwulqLPqpcMOZ9ZwS7Y71tMaxfBXZNy6hULOaUrB8z\ny1Eq6Y54Kqtgbx5aOuSGADMGwQKBgQDjgL0hdp4RpMFgBN+7ve5MxVFUxC07+Hsr\n/DehRhsrCDobnNAcAcXJrC11CfC+M/OytRkT2HHDlWcXiSpj5OaGnKqo1lZy4n06\nnPagsBokWUT4qC0TQCJVDGAZzCugS/UXWLa6EWB/IkyuDokGQx05iP/7cdSrdgkY\naK4bUPMybQKBgQC250ilpmDlgv41KgO9q7KiwX+y2CA8BkxxSSR91PUBmrc/lemW\nHbxAeDccNIK437kZH2vsr8qZ9R2YFs3gq8Wm+brXATPsD/XGuHS06L0ij/TURtci\npdCaBHzQ5VGgVbAuJ6DxxwoEDTj4wDJW+3LchFVX4tPViurbprvOp0sgQQKBgQCb\n9wkyJMCu9dVAP3cmnUn+RZPBWhBsuaeveuSkYoyDjstPXMzrNmfjH2+2eg8aRkF+\ntVqw2UT8wbMAVp/CBg3oIQV6ZB61+gHCKhOGC9SQMMbw9VKZjPE8fxRu+yK5bPlk\nfQQgQYN3BQuuk/ZqXZ5ucDaVqe8TcQNBQZqCzZc8bQKBgHcOgmyOQqUPcSmsJQxp\nQRsfBarWtFZMmRoc/5zKcsFniBKXfK49hATROiKpPnBedQruEOvWm8myJRBjO5eF\n980HUmi3B2NEawry96r5owrB5BWN8dp27f/x6B5YvQ1YxPN519X7AH7dhFAAK7R+\niF9mKNBrebjbqEz0g2v628QF\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-gfudr@automated-pulse-sensing-tool.iam.gserviceaccount.com",
+  "client_id": "104445404018886488232",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-gfudr%40automated-pulse-sensing-tool.iam.gserviceaccount.com"
+}

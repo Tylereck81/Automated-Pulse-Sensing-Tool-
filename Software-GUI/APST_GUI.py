@@ -38,6 +38,19 @@ import time
 from slope import getValue, find_m, getValueWithM
 from math import dist
 
+#Firebase
+import pyrebase
+config = {
+    "apiKey": "AIzaSyB_RREgqDSu0hWWt3eWH4lqSz-aTAN4mFs",
+    "authDomain": "automated-pulse-sensing-tool.firebaseapp.com",
+    "databaseURL": "https://automated-pulse-sensing-tool-default-rtdb.firebaseio.com/",
+    "projectId": "automated-pulse-sensing-tool",
+    "storageBucket": "automated-pulse-sensing-tool.appspot.com",
+    "serviceAccount":"firebase_authentication.json"
+}
+
+firebase_storage = pyrebase.initialize_app(config) 
+storage = firebase_storage.storage()
 
 #################################### DECLARATIONS ####################################
 global ani
@@ -205,6 +218,7 @@ def stop_scan(val):
     global Pulse_graph
     global Plot_X
     global start,end
+    global ax2
     start = 0 
     end = len(Measure["X"])
 
@@ -394,7 +408,9 @@ def connect_sensor():
         
 #Upload scan function 
 def upload_scan():
-    global start, end
+    global start, end, ax2
+    global plt
+    global Measure
     if len(nameinfo.get('1.0',tk.END)) == 1 or len(descriptioninfo.get('1.0',tk.END)) == 1:
         messagebox.showinfo("Error", "Please Enter Name and Description for Scan Before Uploading")
     else: 
@@ -417,7 +433,30 @@ def upload_scan():
 
         nameinfo.delete('1.0', tk.END)
         descriptioninfo.delete('1.0', tk.END)
+        
+        #Upload Scan to Firebase
+        storage.child(Name+".txt").put(Name+".txt")
         print("Scan uploaded")
+
+        #Reset data back to 0 for new scan
+        start = 0 
+        end = 0 
+        Measure["X"] = [] 
+        Measure["Pulse"] = [] 
+        Measure["Pressure"] = []
+
+        #Resets the main figure
+        figure = plt.Figure(figsize = (6,5), dpi = 100)
+        ax2 = figure.add_subplot(111) 
+        bar1 = FigureCanvasTkAgg(figure, right_frame)
+        bar1.get_tk_widget().place(x = 25, y = 20)
+        x = Measure["X"]
+        Pressure = Measure["Pressure"] 
+        Pulse = Measure["Pulse"]
+        ax2.plot(x, Pulse, label ='Pulse')
+        ax2.plot(x, Pressure, label ='Pressure')
+
+
 
 
 #Used to increase/decrease the steps for movement 
