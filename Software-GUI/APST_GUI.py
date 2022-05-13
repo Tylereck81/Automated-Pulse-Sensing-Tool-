@@ -417,7 +417,7 @@ def upload_scan():
         Name = nameinfo.get('1.0', 'end-1c')
         Description = descriptioninfo.get('1.0', 'end-1c')
 
-        file = open(Name+".txt", "a")
+        file = open(Name+"_PulseInfo.txt", "a")
         file.write("Name: "+ Name+"\n\n")
         file.write("Description: " + Description+"\n\n")
         file.write("Pulse Data Set: \n") 
@@ -430,12 +430,28 @@ def upload_scan():
             file.write(str(Measure["X"][i])+" : "+str(Measure["Pressure"][i])+"\n")
         
         file.close()
+        figure = plt.Figure(figsize = (6,5), dpi = 100)
+        ax2 = figure.add_subplot(111)
+        x = Measure["X"][start:end]
+        Pressure = Measure["Pressure"][start:end]
+        Pulse = Measure["Pulse"][start:end]
+        ax2.plot(x, Pulse, label ='Pulse')
+        ax2.plot(x, Pressure, label ='Pressure') 
+
+        
+        figure.savefig(Name+".png")
 
         nameinfo.delete('1.0', tk.END)
         descriptioninfo.delete('1.0', tk.END)
         
         #Upload Scan to Firebase
-        storage.child(Name+".txt").put(Name+".txt")
+        path_icloud_image = "Patients/"+Name+"/"+Name+".png"
+        path_icloud_file = "Patients/"+Name+"/"+Name+"_PulseInfo.txt"
+        path_of_image = Name+".png"
+        path_of_file = Name+"_PulseInfo.txt"
+
+        storage.child(path_icloud_file).put(path_of_file)
+        storage.child(path_icloud_image).put(path_of_image)
         print("Scan uploaded")
 
         #Reset data back to 0 for new scan
