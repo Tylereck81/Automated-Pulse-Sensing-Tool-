@@ -105,7 +105,7 @@ def move_Down():
         current_pos[2] -= Step
     write()
 
-def move_Left():
+def move_Right():
     global current_pos
     if current_pos[0]-Step <= 0:
         current_pos[0] = 0
@@ -114,7 +114,7 @@ def move_Left():
     write()
     
 
-def move_Right():
+def move_Left():
     global current_pos
     if current_pos[0]+Step >=MAX_X: 
         current_pos[0] = MAX_X
