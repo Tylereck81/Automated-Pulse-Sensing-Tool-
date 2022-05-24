@@ -39,6 +39,14 @@ If all steps were properly executed, the main GUI screen will appear as shown be
 ## Instructions
 In order to run the program, make sure the pulse sensor, arduino, and camera are all connected via USB and the computer recongizes them.   
   
+The two modes that are available are Manual and Automatic. Manual is selected by default. 
+
+ * ### Manual 
+     - Intended mode for the doctor. The detect button should first be used to activate the detection algorithm when hand is placed in camera view. The stop button is to freeze the frame so that the user may have a chance to select the point. Clicking the point activates the motor movement to have the sensor move directly beneath the selected pulse point. Sensor Arrow Motors, shown in the Options section, should then be used to move motors down to point manually. When ready to scan, the Scan button should then be pressed. A screen, recording and graphing live data pulse points, will pop up to indicate the scan is taking place. When finished, the Stop button should then be pressed to stop the scan. Edit Graph button can be pressed to select a subset of the graph; left click to select start point and right click to select end point. Lastly, information about the patient can be entered in text area and uploaded by pressing the Upload button. 
+
+
+* ### Automatic
+     - Intended mode for patient. When the Automatic button is pressed in the Options section, a user-friendly instruction screen will pop up for users to read. After instructions have been read, the finish button will be enabled to press. Automation will start 5 seconds after the Finish button is pressed. The tool will automatically detect the pulse point, select the pulse point, move motors to that point, and scan for 30 seconds. When finished, the user will have to press the Stop Scan button and enter information to be uploaded. 
 
 
 
