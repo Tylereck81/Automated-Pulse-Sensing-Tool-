@@ -1,33 +1,65 @@
 # Automated Pulse Sensing Tool
+![APST_mainpic](https://github.com/Tylereck81/Automated-Pulse-Sensing-Tool-/assets/68008817/7db9e12f-c4e8-4ade-9551-36984de9ae41) 
 
 2021-2022 NDHU Undergraduate Project  
 Group Members: Tyler Edwardo Eck  
 Advisor: 顏士淨 (Shi-Jim Yen)  
 
 ## Introduction 
-Automated Pulse Sensing Tool is a tool that allows for users to measure their pulse with ease. Both the hardware and software were exclusively developed for the purpose of the NDHU Undergraduate Project.    
+Automated Pulse Sensing Tool is a tool that allows users to measure their pulse with ease. With the simple push of a button, this tool will detect the pulse location on a person's wrist, move the sensor to that location, and record the TCM (Tradional Chinese Medicine) pulse readings. Finally, the results will be automatically uploaded to the cloud for remote doctors to observe.    
+
+This project, including both the hardware and software, was exclusively developed and submitted as my final entry for the 2021 NDHU Undergraduate Project.      
 
 Within the repository, you will find both the documentations for the project, including the presentations, poster, and research report, and the two main programs used together to control the tool. 
 
+## Hardware 
+The Automated Pulser Sensing Tool incorporates multiple hardware components that work together to give the tool its utlity. The following is what was used:     
+
+### Creality CR10s 3D printer 
+The recycled 3D printer was used as the main base for my project. It provides a main hand-rest area for patients with all the necessary motors and stop switches connected in an X,Y, and Z plane.
+   
+![xyz](https://github.com/Tylereck81/Automated-Pulse-Sensing-Tool-/assets/68008817/7021c40f-edfb-4a27-9f45-f3bce4c0ff46)
+  
+### HK-2019 Cylindrical Pusle Sensor 
+This 200Hz pulse sensor measures both pulse and pressure for TCM pulse points.    
+
+![WhatsApp Image 2022-04-29 at 3 05 45 PM (1)](https://github.com/Tylereck81/Automated-Pulse-Sensing-Tool-/assets/68008817/1999c11e-f49c-4a39-a711-4329ad45e313)    
+
+### StereoLabs ZED dual camera 
+The camera was specifically chosen for its high frame rate and long-range 3D sensing.    
+![camera](https://github.com/Tylereck81/Automated-Pulse-Sensing-Tool-/assets/68008817/e9a5c995-fe23-446f-9f2c-9255a442313e)
+
+### 3D-printed Component 
+This 3D printed component was designed to mount the camera and sensors together for the motors to move.    
+![3dprintedpart](https://github.com/Tylereck81/Automated-Pulse-Sensing-Tool-/assets/68008817/23438978-40ca-4a7b-ac9e-bb2a0250a925)
+
+### Final Tool 
+The completed hardware with all the subcomponents mentioned above is shown below.  
+![Complete Pic](https://github.com/Tylereck81/Automated-Pulse-Sensing-Tool-/assets/68008817/7c66a8c6-3b81-4ec7-ac36-a21e7a821091)
+
+## Software 
+   
 ## Setup
-In order to run the programs locally, follow the necessary steps below:
+The Automated Pulse Sensing Tool requires both the necessary software configurations and the physical tool available in order to sucessfully record and upload data. However, because the physical tool is property of the NDHU AI Lab, I can only include the software configurations to run the main python GUI program.    
+
+In order to run the programs locally, follow the necessary steps below:    
 
 1.  Download and install [Anaconda](https://docs.anaconda.com/anaconda/install/index.html) - Python 3.5 or 3.6
      
-3.  Create an environment and download the necessary packages below using "conda install".
-    * Numpy 
-    * Matplotlib
-    * Tk - Tkinter 
-    * Pillow - Image, ImageTk
-    * OpenCv
-    * Serial 
-    * Mediapipe 
-    * Pyrebase
+2.   Create an environment and download the necessary packages below using "conda install".   
+     * Numpy 
+     * Matplotlib
+     * Tk - Tkinter 
+     * Pillow - Image, ImageTk
+     * OpenCv
+     * Serial 
+     * Mediapipe 
+     * Pyrebase
    
-4. Download and install [Arduino IDE](https://www.arduino.cc/en/software)
-5. Download USB Driver for the HK2019 Pulse and Pressure Sensor - instructions and website found in "USB-- READ ME--" file in project. 
-6. Upload "Motor_Movement" file to the Arduino Board using Arduino IDE. 
-7. Run the main "APST_GUI" python file.
+3. Download and install [Arduino IDE](https://www.arduino.cc/en/software)
+4. Download USB Driver for the HK2019 Pulse and Pressure Sensor - instructions and website found in "USB-- READ ME--" file in project. 
+5. Upload "Motor_Movement" file to the Arduino Board using Arduino IDE. 
+6. Run the main "APST_GUI" python file.
 
 If all steps were properly executed, the main GUI screen will appear as shown below.
 
