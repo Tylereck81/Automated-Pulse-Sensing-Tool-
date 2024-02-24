@@ -14,29 +14,27 @@ Within the repository, you will find both the documentations for the project, in
 
 ## Hardware 
 The Automated Pulser Sensing Tool incorporates multiple hardware components that work together to give the tool its utlity. The following is what was used:     
+     
+### Creality CR10s 3D printer   
+The recycled 3D printer was used as the main base for my project. It provides a main hand-rest area for patients with all the necessary motors and stop switches connected in an X,Y, and Z plane.     
+<img src="https://github.com/Tylereck81/Automated-Pulse-Sensing-Tool-/assets/68008817/7021c40f-edfb-4a27-9f45-f3bce4c0ff46" width="400" height="600">    
 
-### Creality CR10s 3D printer 
-The recycled 3D printer was used as the main base for my project. It provides a main hand-rest area for patients with all the necessary motors and stop switches connected in an X,Y, and Z plane.
-   
-![xyz](https://github.com/Tylereck81/Automated-Pulse-Sensing-Tool-/assets/68008817/7021c40f-edfb-4a27-9f45-f3bce4c0ff46)
-  
 ### HK-2019 Cylindrical Pusle Sensor 
 This 200Hz pulse sensor measures both pulse and pressure for TCM pulse points.    
-
-![WhatsApp Image 2022-04-29 at 3 05 45 PM (1)](https://github.com/Tylereck81/Automated-Pulse-Sensing-Tool-/assets/68008817/1999c11e-f49c-4a39-a711-4329ad45e313)    
+<img src="https://github.com/Tylereck81/Automated-Pulse-Sensing-Tool-/assets/68008817/1999c11e-f49c-4a39-a711-4329ad45e313" width="400" height="600"> 
 
 ### StereoLabs ZED dual camera 
 The camera was specifically chosen for its high frame rate and long-range 3D sensing.    
-![camera](https://github.com/Tylereck81/Automated-Pulse-Sensing-Tool-/assets/68008817/e9a5c995-fe23-446f-9f2c-9255a442313e)
+<img src="https://github.com/Tylereck81/Automated-Pulse-Sensing-Tool-/assets/68008817/e9a5c995-fe23-446f-9f2c-9255a442313e" width="400" height="400"> 
 
 ### 3D-printed Component 
 This 3D printed component was designed to mount the camera and sensors together for the motors to move.    
-![3dprintedpart](https://github.com/Tylereck81/Automated-Pulse-Sensing-Tool-/assets/68008817/23438978-40ca-4a7b-ac9e-bb2a0250a925)
+<img src="https://github.com/Tylereck81/Automated-Pulse-Sensing-Tool-/assets/68008817/23438978-40ca-4a7b-ac9e-bb2a0250a925" width="700" height="600"> 
 
 ### Final Tool 
 The completed hardware with all the subcomponents mentioned above is shown below.  
-![Complete Pic](https://github.com/Tylereck81/Automated-Pulse-Sensing-Tool-/assets/68008817/7c66a8c6-3b81-4ec7-ac36-a21e7a821091)
-
+<img src="https://github.com/Tylereck81/Automated-Pulse-Sensing-Tool-/assets/68008817/7c66a8c6-3b81-4ec7-ac36-a21e7a821091" width="400" height="600"> 
+    
 ## Software 
    
 ## Setup
