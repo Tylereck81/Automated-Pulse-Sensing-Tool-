@@ -81,16 +81,45 @@ If all steps were properly executed, the main GUI screen will appear as shown be
 
 
 ## Instructions
-In order to run the program, make sure the pulse sensor, arduino, and camera are all connected via USB and the computer recongizes them.   
-  
-The two modes that are available are Manual and Automatic. Manual is selected by default. 
+In order to run the program successfully, ensure the pulse sensor, arduino, and camera are all connected via USB and the computer recongizes them.
+ 
+The two modes that are available are Manual and Automatic. Manual is selected by default.    
 
  * ### Manual 
-     - Intended mode for the doctor. The detect button should first be used to activate the detection algorithm when hand is placed in camera view. The stop button is to freeze the frame so that the user may have a chance to select the point. Clicking the point activates the motor movement to have the sensor move directly beneath the selected pulse point. Sensor Arrow Motors, shown in the Options section, should then be used to move motors down to point manually. When ready to scan, the Scan button should then be pressed. A screen, recording and graphing live data pulse points, will pop up to indicate the scan is taking place. When finished, the Stop button should then be pressed to stop the scan. Edit Graph button can be pressed to select a subset of the graph; left click to select start point and right click to select end point. Lastly, information about the patient can be entered in text area and uploaded by pressing the Upload button. 
+Manual mode is intended for doctors to use as they are given the choice to manually move the motors and start scan when desired. The following steps are the sequence that doctors can follow:
+     
+1. The motor movement is initiated through the Options menu shown below. The sensor can be moved on the X and Z axis by through the Sensor movement arrows. The base, where the patients hand would lay, can also be moved on the Y axis through the Base movement arrows. Lastly, the doctors can manually control the steps that the motors can take for a given click of the arrow. By adjusting the Steps slider, each movement can be shortened or lengthened.      
+          
+![op](https://github.com/Tylereck81/Automated-Pulse-Sensing-Tool-/assets/68008817/3f8427ec-a958-49d3-9566-4a1b7b5ed9b6)      
+     
+2. After a desired location is reached, the doctor can activate the detection algorithm, through the "Detect" button in the Camera section, to determine if the location of the pulse point is in the blue circle; this blue circle displays the exact point where the sensor will read. The "Stop" button is used to freeze the frame so that the doctor may have a chance to click on the point that the sensor should move to. Clicking the point activates the motor movement to have the sensor move directly beneath the selected pulse point.       
+     
+![1](https://github.com/Tylereck81/Automated-Pulse-Sensing-Tool-/assets/68008817/8e33864a-cfa2-4696-87d3-e983259f9440)        
+      
 
+3. When ready to scan, the "Scan" button in the Options menu should be pressed. A seperate screen will pop up to indicate the scan is taking place. When finished, the "Stop" button should then be pressed to stop the scan. To see a more detailed version of the recorded graph, the "Open Graph" button in the graph section can be pressed. To "cut" or record a subsection of the graph, the mouse's left click is used to select start point and right click to select end point.
+      
+![g5](https://github.com/Tylereck81/Automated-Pulse-Sensing-Tool-/assets/68008817/956422ad-716f-4c8b-82a9-406ccc4ea8ad)
+       
+![g2](https://github.com/Tylereck81/Automated-Pulse-Sensing-Tool-/assets/68008817/7231f721-8171-490c-84c2-4a7b8fdc48fe)
+     
+5.  Lastly, information about the patient can be entered in text area and uploaded by pressing the Upload button.    
+     
+![u5](https://github.com/Tylereck81/Automated-Pulse-Sensing-Tool-/assets/68008817/6c2e573e-1401-4894-9b03-9cc71fee144b)
+   
 
 * ### Automatic
-     - Intended mode for patient. When the Automatic button is pressed in the Options section, a user-friendly instruction screen will pop up for users to read. After instructions have been read, the finish button will be enabled to press. Automation will start 5 seconds after the Finish button is pressed. The tool will automatically detect the pulse point, select the pulse point, move motors to that point, and scan for 30 seconds. When finished, the user will have to press the Stop Scan button and enter information to be uploaded. 
+Automatic mode is intended for patients to use and includes user-friendly instructions that patients should read carefully. 
+
+1. When the Automatic button is pressed in the Options section, a seperate instruction screen will appear for users to read. These instructions include different warnings and proper hand form for an accurate scan.    
+
+![1](https://github.com/Tylereck81/Automated-Pulse-Sensing-Tool-/assets/68008817/bfa68db8-5e1d-45ad-8478-ce273fc280b5)     
+         
+![2](https://github.com/Tylereck81/Automated-Pulse-Sensing-Tool-/assets/68008817/47e711e4-57dd-4913-9034-ab0a4878e674)      
+
+2. After the instructions have been read, the "Finish" button will be enabled to press which starts the automation process. The tool will automatically detect the pulse point, select the pulse point, move motors to that point, and scan for 30 seconds. When finished, the patient will be prompted to enter information and then press the "Upload" button as shown in the Manual section. 
+
+
 
 
 
