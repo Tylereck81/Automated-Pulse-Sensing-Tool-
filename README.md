@@ -13,7 +13,7 @@ This project, including both the hardware and software, was exclusively develope
 Within the repository, you will find both the documentations for the project, including the presentations, poster, and research report, and the two main programs used together to control the tool. 
 
 ## Hardware 
-The Automated Pulser Sensing Tool incorporates multiple hardware components that work together to give the tool its utlity. The following is what was used:     
+The Automated Pulse Sensing Tool incorporates multiple hardware components that work together to give the tool its utlity. The following is what was used:     
      
 ### Creality CR10s 3D printer   
 The recycled 3D printer was used as the main base for my project. It provides a main hand-rest area for patients with all the necessary motors and stop switches connected in an X,Y, and Z plane.     
@@ -36,7 +36,21 @@ The completed hardware with all the subcomponents mentioned above is shown below
 <img src="https://github.com/Tylereck81/Automated-Pulse-Sensing-Tool-/assets/68008817/7c66a8c6-3b81-4ec7-ac36-a21e7a821091" width="400" height="600"> 
     
 ## Software 
+The Automated Pulse Sensing Tool needs software to move step motors through Arduino and a Python program to communicate with Arduino and process motor movement. The Python program also acts as the main GUI that patients and doctors will interact with. Therefore, in the Hardware/Arduino folder, the "Motor_Movement.ino" is used to move the motors and in the Software GUI folder, "APST_GUI.py" is the main python program.     
+     
+The APST_GUI.py was designed and implemented using Tkinter, a package in the standard Python interface GUI toolkit. As shown in diagram below, the GUI consists of 4 main parts: 
+
+![label](https://github.com/Tylereck81/Automated-Pulse-Sensing-Tool-/assets/68008817/1106bd83-472a-4207-bcf6-bb4885bace6d)
+
+1. Camera - shows users a live feed of the camera and its detection of the pulse point.   
+     
+2. Options - controls motors manually with arrows and step selection, controls initiation of scan, and displays connection information regarding the pulse sensors, motors, and camera.  
    
+3. Graph - displays the graph of the pulse that was taken.    
+   
+4. Information - allows users to enter additional information about the graph including name, date, and description (optional). This section also includes the Upload button that is necessary to send data via Firebase to the cloud.    
+   
+
 ## Setup
 The Automated Pulse Sensing Tool requires both the necessary software configurations and the physical tool available in order to sucessfully record and upload data. However, because the physical tool is property of the NDHU AI Lab, I can only include the software configurations to run the main python GUI program.    
 
