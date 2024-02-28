@@ -13,7 +13,7 @@ This project, including both the hardware and software, was exclusively develope
 Within the repository, you will find both the documentations for the project, including the presentations, poster, and research report, and the two main programs used together to control the tool. 
 
 ## Hardware 
-The Automated Pulse Sensing Tool incorporates multiple hardware components that work together to give the tool its utlity. The following is what was used:     
+The Automated Pulse Sensing Tool incorporates multiple hardware components that work together to give the tool its utility. The following is what was used:     
      
 ### Creality CR10s 3D printer   
 The recycled 3D printer was used as the main base for my project. It provides a main hand-rest area for patients with all the necessary motors and stop switches connected in an X,Y, and Z plane.     
